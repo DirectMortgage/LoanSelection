@@ -43,7 +43,8 @@ const LoanProductTable = (props) => {
     LoanID,
     handleRunAUS,
     handleLock,
-    handleLoanProducts
+    handleLoanProducts,
+    handleReset
   } = props;
   let GloLoanId = 0,
     GloCustId = 0;
@@ -1153,7 +1154,8 @@ const LoanProductTable = (props) => {
       name: "DoLockRateProcess",
       params: obj,
     }).then((response) => {
-    //  handleLoanProducts([])
+   // handleLoanProducts([])
+    handleReset()
       setContextDetails((prevContext) => {
         return {
           ...prevContext,

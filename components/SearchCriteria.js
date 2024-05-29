@@ -36,6 +36,7 @@ import {
   handleBasicInfoInProd,
   handleGetCompNameByCompID,
   handleAPI_,
+  handleWholeSaleRights,
 } from "./accessories/CommonFunctions";
 import DropDownButton from "./accessories/DropDownButton";
 import { web, android, ios } from "./accessories/Platform";
@@ -957,6 +958,8 @@ const SearchCriteria = ({
           CompName: RootObjects["compname"],
         };
       });
+     // let CompName = await handleWholeSaleRights(value);
+
       setContextDetails((prevContext) => {
         return {
           ...prevContext,
@@ -3341,7 +3344,8 @@ const SearchCriteria = ({
           width: "100%",
         }}
       >
-        {contextDetails["LockingFrom"] != "PQ" &&
+        {
+        //contextDetails["LockingFrom"] != "PQ" &&
           contextDetails["IsLocked"] == 1 && (
             <View
               style={{
@@ -3400,6 +3404,8 @@ const SearchCriteria = ({
                       changeRateXML: undefined,
                     };
                   });
+                  setLoanProducts([]);
+      handleLoanProducts([]);
                 }}
               />
               {!contextDetails["ChangeLoanProgram"] && (

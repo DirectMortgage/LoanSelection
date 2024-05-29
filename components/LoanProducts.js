@@ -19,7 +19,7 @@ import {
   fnAddDummyRow,
 } from "./accessories/CommonFunctions";
 
-const LoanProducts = ({ Data, SearchInfo, handleLock }) => {
+const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
   const { contextDetails, setContextDetails } = useContext(context); //Get value from context
   const [LoanProducts, setLoanProducts] = useState();
   const [searchDetails, setSearchDetails] = useState();
@@ -35,6 +35,9 @@ const LoanProducts = ({ Data, SearchInfo, handleLock }) => {
       setRawLoanProducts(Data);
       setSearchDetails(SearchInfo);
       handleLoadGrid(Data, SearchInfo);
+    }
+    else{
+      setRawLoanProducts([])
     }
     //console.log("Context Info ======>", contextDetails);
   }, [Data["DataOut"]]);
@@ -1422,7 +1425,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock }) => {
         LineIds_[index],
         3
       );
-      if(ActiveProduct[5]["RateData"]){
+      if(ActiveProduct?.[5]?.["RateData"] || null){
       let NoteRateRow = fnProvideRowsByKeys(
         RawLoanProducts,
         "NoteRateAddons",
@@ -1788,6 +1791,10 @@ const LoanProducts = ({ Data, SearchInfo, handleLock }) => {
     }
     return nearestRate || [];
   };
+  const handleReset =()=>{
+    handleLoanProducts([])
+    setRawLoanProducts([])
+  }
   // ========================================DEVELOPMENT BLOCK =========================
   function onRenderCallback(
     id, // Profiler ID
@@ -1835,6 +1842,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock }) => {
             LoanID={contextDetails["LoanId"]}
             handleLock={handleLock}
             handleLoanProducts={setLoanProducts}
+            handleReset={handleReset}
           />
         </Profiler>
       )}

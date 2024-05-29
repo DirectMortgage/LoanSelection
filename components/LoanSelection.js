@@ -105,6 +105,7 @@ const LoanSelection = (props) => {
                 Data={Products}
                 SearchInfo={contextDetails["InputData"] || []}
                 handleLock={handleLock}
+                handleLoanProducts={setLoanProducts}
               />
             </View>
           )}

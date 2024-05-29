@@ -452,7 +452,7 @@ const RateBandTable = (props) => {
                           {ActiveRate?.[CommonId]?.["IntRate"] ==
                             column["IntRate"] &&
                             (contextDetails["IsWholesaleLender"] == 1 ||
-                              contextDetails["EmpNum"] == "32179") && (
+                              contextDetails["EmpNum"] == "32179" || true) && (
                               <Icon
                                 name="information-circle"
                                 size={16}

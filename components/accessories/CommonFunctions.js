@@ -833,7 +833,16 @@ const handleGetCompNameByCompID = async (CompNum) => {
   });
   return Response;
 };
-
+const handleGetWholesaleRights = async (EmpNum) => {
+  let obj = { EmpNum};
+  let Response = await handleAPI({
+    name: "wholesaleintrateaccess",
+    params: obj,
+  }).then((response) => {
+    return response;
+  });
+  return Response;
+};
 function restrictCharacters(value) {
   const allowedCharacters = /^[A-Za-z]*$/;
 

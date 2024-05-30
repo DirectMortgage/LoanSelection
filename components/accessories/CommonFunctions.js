@@ -665,7 +665,7 @@ const handleGetMIQuote = (obj) => {
     name: "GetMIQuote_Wrapper",
     params: obj,
   }).then((response) => {
-  console.info('GetMIQuote_Wrapper initiated')
+    console.info("GetMIQuote_Wrapper initiated");
     return response;
   });
 };
@@ -689,7 +689,30 @@ const handleOpenPopUp_MIQuote = async (LoanID, isUpdatedelay) => {
   });
   return Response;
 };
-
+const handleProceedRunMIQuote = async (
+  LoanID,
+  Fico,
+  LoanAmount,
+  LoanAmounttwo,
+  LTV,
+  CLTV
+) => {
+  let obj = {
+    LoanID: parseInt(LoanID),
+    Fico,
+    LoanAmount: parseFloat(LoanAmount),
+    LoanAmounttwo: parseFloat(LoanAmounttwo),
+    LTV: parseFloat(LTV),
+    CLTV: parseFloat(CLTV),
+  };
+  let Response = await handleAPI({
+    name: "ProceedRunMiQuote",
+    params: obj,
+  }).then((response) => {
+    return response;
+  });
+  return Response;
+};
 
 const handleBasicInfoInProd = () => {
   try {
@@ -824,7 +847,7 @@ const handleConstructXML = (res) => {
   return changeRateXML;
 };
 const handleGetCompNameByCompID = async (CompNum) => {
-  let obj = { CompNum};
+  let obj = { CompNum };
   let Response = await handleAPI({
     name: "GetCompNameByCompID",
     params: obj,
@@ -834,7 +857,7 @@ const handleGetCompNameByCompID = async (CompNum) => {
   return Response;
 };
 const handleGetWholesaleRights = async (EmpNum) => {
-  let obj = { EmpNum};
+  let obj = { EmpNum };
   let Response = await handleAPI({
     name: "wholesaleintrateaccess",
     params: obj,
@@ -846,14 +869,25 @@ const handleGetWholesaleRights = async (EmpNum) => {
 function restrictCharacters(value) {
   const allowedCharacters = /^[A-Za-z]*$/;
 
-
   if (!allowedCharacters.test(value)) {
-      return true
-  }
-  else{
-    return false
+    return true;
+  } else {
+    return false;
   }
 }
+const handleSelectQuote = (LineId, SessionId) => {
+  let obj = { LineId, SessionId };
+  try {
+    handleAPI({
+      name: "SelectMIQuote",
+      params: obj,
+    }).then((response) => {
+      console.log("Selected MI Quote successfully");
+    });
+  } catch (error) {
+    console.log("Error in Selecting MI Quote API");
+  }
+};
 export {
   handleAPI,
   formatCurrency,
@@ -891,5 +925,7 @@ export {
   handleConstructXML,
   handleAPI_,
   handleGetCompNameByCompID,
-  restrictCharacters
+  restrictCharacters,
+  handleSelectQuote,
+  handleProceedRunMIQuote,
 };

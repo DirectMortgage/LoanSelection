@@ -19,7 +19,7 @@ import {
   fnAddDummyRow,
 } from "./accessories/CommonFunctions";
 
-const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
+const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
   const { contextDetails, setContextDetails } = useContext(context); //Get value from context
   const [LoanProducts, setLoanProducts] = useState();
   const [searchDetails, setSearchDetails] = useState();
@@ -35,9 +35,8 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
       setRawLoanProducts(Data);
       setSearchDetails(SearchInfo);
       handleLoadGrid(Data, SearchInfo);
-    }
-    else{
-      setRawLoanProducts([])
+    } else {
+      setRawLoanProducts([]);
     }
     //console.log("Context Info ======>", contextDetails);
   }, [Data["DataOut"]]);
@@ -51,7 +50,8 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
       2
     );
     let RawCommonLoanProducts = fnProvideRowsByKeys(RawLoanData, "", -1, 5);
-    let PaymentDetails = [],Glo_IncludeLenderComp =0;
+    let PaymentDetails = [],
+      Glo_IncludeLenderComp = 0;
     for (let i = 0; i < LoanProduct.length; i++) {
       const {
         Accept,
@@ -62,9 +62,9 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
         ParPoints,
         PointsCost,
         PointsCostFormatted,
-        IncludeLenderComp
+        IncludeLenderComp,
       } = LoanProduct[i];
-      Glo_IncludeLenderComp = IncludeLenderComp
+      Glo_IncludeLenderComp = IncludeLenderComp;
       let OneDay = 24 * 60 * 60 * 1000;
       let FirstDate = new Date(RunDate);
       let SecondDate = new Date(LockDays);
@@ -223,7 +223,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
           PointsCostFormatted: fnFormatAmount(FinalAmt),
           IncludeLenderComp: LenderCompPlan || 0,
           //  Payment: Total,
-          LenderCompPlan:LenderCompPlan,
+          LenderCompPlan: LenderCompPlan,
           LockPeriodDesc: LockPeriod,
           APR: "Calculating...",
         };
@@ -273,7 +273,8 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
             ...LenderProducts[0],
             LineIds: LineIds.join(","),
             LnProgActiveIds: LnProgActiveIds.join(","),
-            IsWorseCase: uniqueVal.length != LnProgActiveIds.length ? true : false,
+            IsWorseCase:
+              uniqueVal.length != LnProgActiveIds.length ? true : false,
             CommonName: RawCommonLoanProducts[i]["CommonProgramName"],
             showInfoInHeader: IsShowInfoInHeader,
           };
@@ -361,8 +362,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
 
     //===================================== Updating Lender Comp ========================
     setTimeout(() => {
-      
-      handleLenderComp("PageLoad", LoanProduct,Glo_IncludeLenderComp);
+      handleLenderComp("PageLoad", LoanProduct, Glo_IncludeLenderComp);
     }, 10);
     //===================================== Updating Lender Comp ========================
     //======================================= MULTI LENDER =====================================
@@ -376,8 +376,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
         ...prevContext,
         Glo_IncludeLenderComp,
       };
-    }
-    )
+    });
   };
   const handleUpdateLoanProducts = (Product, SearchInfo, RawLoanData) => {
     let ProductAddons = {},
@@ -592,59 +591,60 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
         Product[i]["InterestRate"] = Rate;
         Product[i]["RateChosen"] = `${FinalPoint} | ${BaseAmt} ${RateChosen}`;
       } else {
-        if( ActiveProduct?.[5]?.["RateData"]){
-        let hasRate =( ActiveProduct?.[5]?.["RateData"] || [])?.filter(
-          (e) => parseFloat(e["Rate"]) == parseFloat(Product[i]["InterestRate"])
-        );
-        let nearestRate = 0;
-        if (hasRate.length == 0 || hasRate[0]["Col1"] == "1000.000") {
-          nearestRate = fnFindNearestInterestRate(
-            Product[i]["InterestRate"],
-            ActiveProduct[5]["RateData"]
+        if (ActiveProduct?.[5]?.["RateData"]) {
+          let hasRate = (ActiveProduct?.[5]?.["RateData"] || [])?.filter(
+            (e) =>
+              parseFloat(e["Rate"]) == parseFloat(Product[i]["InterestRate"])
           );
-          if (Object.keys(nearestRate).length) {
-            Product[i]["InterestRate"] = nearestRate["Rate"];
-            Product[i]["IntRateID"] = nearestRate["IntRateID"];
-            //console.log("nearestRate == >", nearestRate);
+          let nearestRate = 0;
+          if (hasRate.length == 0 || hasRate[0]["Col1"] == "1000.000") {
+            nearestRate = fnFindNearestInterestRate(
+              Product[i]["InterestRate"],
+              ActiveProduct[5]["RateData"]
+            );
+            if (Object.keys(nearestRate).length) {
+              Product[i]["InterestRate"] = nearestRate["Rate"];
+              Product[i]["IntRateID"] = nearestRate["IntRateID"];
+              //console.log("nearestRate == >", nearestRate);
+            }
           }
+          let BasePoints = fnGetBasePoints(
+            Product[i].IntRateID,
+            Product[i].LockPeriodID,
+            ActiveProduct[5]["RateData"],
+            ActiveProduct[4]["LockPeriod"]
+          );
+          //BasePoints = parseFloat(BasePoints) + parseFloat(TotalDiscount);
+          let BaseAmt =
+            (parseFloat(cleanValue(Product[i].LoanAmt, 1)) *
+              parseFloat(BasePoints)) /
+            100.0;
+          3;
+          OrgBaseAmt = BaseAmt.toString().replace(",", "").replace("$", "");
+          OrgBaseAmt = parseFloat(OrgBaseAmt) + parseFloat(TotalAdjust);
+          RateBand_ = {
+            lineid: Product[i]["LineId"],
+            LockPeriodDays: Product[i].LockPeriodDesc,
+            IntRate: formatPercentage(Product[i].InterestRate),
+            BasePoints: BasePoints + "%",
+            BaseAmt: formatCurrency(fnRoundUpValue(BaseAmt, 2)),
+            MonthlyPayment: Product[i].MonthlyPayment,
+            LockPeriodID: Product[i].LockPeriodID,
+            CalAmt: OrgBaseAmt,
+          };
+
+          AddonsResult = handleAddons({ Row: RateBand_ }, Adjustmentarr);
+          let { finalPoints, finalAmount } = AddonsResult["FinalVal"];
+
+          Product[i]["BasePoints"] = BasePoints;
+          Product[i]["BaseAmount"] = BaseAmt;
+          Product[i]["FinalPoint"] = finalPoints;
+          Product[i]["FinalAmt"] = finalAmount;
+          Product[i][
+            "RateChosen"
+          ] = `${finalPoints} | ${finalAmount} ${AddonsResult["FinalVal"]["RateChosen"]}`;
         }
-        let BasePoints = fnGetBasePoints(
-          Product[i].IntRateID,
-          Product[i].LockPeriodID,
-          ActiveProduct[5]["RateData"],
-          ActiveProduct[4]["LockPeriod"]
-        );
-        //BasePoints = parseFloat(BasePoints) + parseFloat(TotalDiscount);
-        let BaseAmt =
-          (parseFloat(cleanValue(Product[i].LoanAmt, 1)) *
-            parseFloat(BasePoints)) /
-          100.0;
-        3;
-        OrgBaseAmt = BaseAmt.toString().replace(",", "").replace("$", "");
-        OrgBaseAmt = parseFloat(OrgBaseAmt) + parseFloat(TotalAdjust);
-        RateBand_ = {
-          lineid: Product[i]["LineId"],
-          LockPeriodDays: Product[i].LockPeriodDesc,
-          IntRate: formatPercentage(Product[i].InterestRate),
-          BasePoints: BasePoints + "%",
-          BaseAmt: formatCurrency(fnRoundUpValue(BaseAmt, 2)),
-          MonthlyPayment: Product[i].MonthlyPayment,
-          LockPeriodID: Product[i].LockPeriodID,
-          CalAmt: OrgBaseAmt,
-        };
-
-        AddonsResult = handleAddons({ Row: RateBand_ }, Adjustmentarr);
-        let { finalPoints, finalAmount } = AddonsResult["FinalVal"];
-
-        Product[i]["BasePoints"] = BasePoints;
-        Product[i]["BaseAmount"] = BaseAmt;
-        Product[i]["FinalPoint"] = finalPoints;
-        Product[i]["FinalAmt"] = finalAmount;
-        Product[i][
-          "RateChosen"
-        ] = `${finalPoints} | ${finalAmount} ${AddonsResult["FinalVal"]["RateChosen"]}`;
       }
-    }
       ////////////////////////////////// Monthly Payment /////////////////////////////////////////
       let PaymentDetailsJSON = fnProvideRowsByKeys(
         RawLoanData,
@@ -662,39 +662,39 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
       } else {
         Rate = Product[i]["InterestRate"];
       }
-      let RatBand = (ActiveProduct?.[5]?.["RateData"]||[]).filter(
+      let RatBand = (ActiveProduct?.[5]?.["RateData"] || []).filter(
         (e) => e["Rate"] == Rate
       );
 
       if (RatBand.length == 1 && RatBand[0]["Col1"] == "1000.000") {
         NoRateBandAvail = true;
       }
-      if(ActiveProduct?.[5]?.["RateData"]){
-      let {
-        PropFin,
-        PropHOA,
-        PropHazard,
-        PropMI,
-        PropOtherI,
-        PropOther,
-        PropRETaxes,
-      } = Row[0];
-      let Monthly = RatBand?.[0]?.["MonthlyPayment"] || 0;
-      let Total =
-        parseFloat(cleanValue(Monthly)) +
-        parseFloat(PropFin) +
-        parseFloat(PropHazard) +
-        parseFloat(PropRETaxes) +
-        parseFloat(PropMI) +
-        parseFloat(PropHOA) +
-        parseFloat(PropOther);
-      Product[i]["Payment"] = Total;
-      Product[i]["PaymentWithoutAddons"] = Monthly;
-      Product[i]["IsLenderComp"] = RootObjects?.[0]?.["CompLender"];
+      if (ActiveProduct?.[5]?.["RateData"]) {
+        let {
+          PropFin,
+          PropHOA,
+          PropHazard,
+          PropMI,
+          PropOtherI,
+          PropOther,
+          PropRETaxes,
+        } = Row[0];
+        let Monthly = RatBand?.[0]?.["MonthlyPayment"] || 0;
+        let Total =
+          parseFloat(cleanValue(Monthly)) +
+          parseFloat(PropFin) +
+          parseFloat(PropHazard) +
+          parseFloat(PropRETaxes) +
+          parseFloat(PropMI) +
+          parseFloat(PropHOA) +
+          parseFloat(PropOther);
+        Product[i]["Payment"] = Total;
+        Product[i]["PaymentWithoutAddons"] = Monthly;
+        Product[i]["IsLenderComp"] = RootObjects?.[0]?.["CompLender"];
 
-      ////////////////////////////////// Monthly Payment /////////////////////////////////////////
+        ////////////////////////////////// Monthly Payment /////////////////////////////////////////
+      }
     }
-  }
     setContextDetails((prevContext) => {
       return {
         ...prevContext,
@@ -899,9 +899,10 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
       return {
         ...prevContext,
         LockRateDetails: LockRateDetails,
-        RateSheetId: IsWorseCase_ ||!contextDetails["RateSheetId"]
-          ? RateSheetId_
-          : contextDetails["RateSheetId"],
+        RateSheetId:
+          IsWorseCase_ || !contextDetails["RateSheetId"]
+            ? RateSheetId_
+            : contextDetails["RateSheetId"],
       };
     });
     //===================== Set Context Details=======================
@@ -1022,7 +1023,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
         setActiveRate((PreActiveRate) => {
           return {
             ...PreActiveRate,
-            [obj["parallelLineId"]]: obj["Row"],
+            [obj["parallelLineId"] || obj["LineId"]]: obj["Row"],
             [obj["CommonId"]]: {
               IntRate: obj["Row"]["IntRate"],
               LineId: obj["LineId"],
@@ -1425,159 +1426,161 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
         LineIds_[index],
         3
       );
-      if(ActiveProduct?.[5]?.["RateData"] || null){
-      let NoteRateRow = fnProvideRowsByKeys(
-        RawLoanProducts,
-        "NoteRateAddons",
-        LineIds_[index],
-        1
-      );
+      if (ActiveProduct?.[5]?.["RateData"] || null) {
+        let NoteRateRow = fnProvideRowsByKeys(
+          RawLoanProducts,
+          "NoteRateAddons",
+          LineIds_[index],
+          1
+        );
 
-      let Products_ = LoanProducts || Products;
-      if (!LockPeriodID) {
-        LockPeriodID = Products_.filter(
-          (e) => e["LineId"] == LineIds_[index] && e["Id"] != -1
-        )[0]["LockPeriodID"];
-      }
-      let LockPeriod = ActiveProduct[4]["LockPeriod"].filter(
-        (e) => e["LockPeriodID"] == LockPeriodID
-      );
-      let Rates = ActiveProduct[5]["RateData"];
-      let Addons = ActiveProduct[6]["Addons"] || [];
-
-      let OrgBaseAmt = "",
-        TotalAdjust = 0,
-        TotalDiscount = 0,
-        FinalPoints = 0;
-      for (let j = 0; j < Addons.length; j++) {
-        let AddonAmount = Addons[j]["AddonAmount"];
-        let Disc = Addons[j]["Disc"];
-        if (
-          Addons[j]["AdjustmentJSON"] != null &&
-          Addons[j]["AdjustmentJSON"].length > 0
-        ) {
-          let AdjustmentJson = JSON.parse(Addons[j]["AdjustmentJSON"]);
-          let rate = Products_.filter(
+        let Products_ = LoanProducts || Products;
+        if (!LockPeriodID) {
+          LockPeriodID = Products_.filter(
             (e) => e["LineId"] == LineIds_[index] && e["Id"] != -1
-          );
-          if (rate.length > 0) {
-            rate = rate[0]["InterestRate"];
-            let iAdjustmentRow = AdjustmentJson.filter(
-              (e) => parseFloat(e["NoteRate"]) == cleanValue(rate)
+          )[0]["LockPeriodID"];
+        }
+        let LockPeriod = ActiveProduct[4]["LockPeriod"].filter(
+          (e) => e["LockPeriodID"] == LockPeriodID
+        );
+        let Rates = ActiveProduct[5]["RateData"];
+        let Addons = ActiveProduct[6]["Addons"] || [];
+
+        let OrgBaseAmt = "",
+          TotalAdjust = 0,
+          TotalDiscount = 0,
+          FinalPoints = 0;
+        for (let j = 0; j < Addons.length; j++) {
+          let AddonAmount = Addons[j]["AddonAmount"];
+          let Disc = Addons[j]["Disc"];
+          if (
+            Addons[j]["AdjustmentJSON"] != null &&
+            Addons[j]["AdjustmentJSON"].length > 0
+          ) {
+            let AdjustmentJson = JSON.parse(Addons[j]["AdjustmentJSON"]);
+            let rate = Products_.filter(
+              (e) => e["LineId"] == LineIds_[index] && e["Id"] != -1
             );
+            if (rate.length > 0) {
+              rate = rate[0]["InterestRate"];
+              let iAdjustmentRow = AdjustmentJson.filter(
+                (e) => parseFloat(e["NoteRate"]) == cleanValue(rate)
+              );
 
-            if (iAdjustmentRow.length > 0) {
-              Disc = iAdjustmentRow[0]["Adjustment"];
-              AddonAmount = iAdjustmentRow[0]["AddonAmount"];
-            } else {
-              Disc = "0";
-              AddonAmount = "0";
+              if (iAdjustmentRow.length > 0) {
+                Disc = iAdjustmentRow[0]["Adjustment"];
+                AddonAmount = iAdjustmentRow[0]["AddonAmount"];
+              } else {
+                Disc = "0";
+                AddonAmount = "0";
+              }
+            }
+          }
+
+          let iDisc = "";
+          if (Disc.toString().indexOf("-") != -1)
+            iDisc = "(" + Disc.toString().replace("-", "") + ")";
+          else iDisc = Disc;
+
+          Adjustmentarr.push({
+            Descript: Addons[j]["Descript"],
+            Rate: Addons[j]["Rate"],
+            Disc: iDisc,
+            AddonAmount: AddonAmount,
+            CondLink: Addons[j]["CondLink"],
+            AdjustmentJSON: JSON.parse(Addons[j]["AdjustmentJSON"] || "[]"),
+          });
+
+          if (AddonAmount.indexOf("(") != -1)
+            TotalAdjust = -+AddonAmount.replace("(", "")
+              .replace(")", "")
+              .replace(",", "")
+              .replace("$", "");
+          else TotalAdjust = AddonAmount.replace(",", "").replace("$", "");
+          TotalAdjust += parseFloat(TotalAdjust);
+          let Dic = "0";
+          if (AddonAmount.toString().indexOf("(") != -1)
+            Dic = AddonAmount.replace("(", "-")
+              .replace(")", "")
+              .replace(",", "")
+              .replace("$", "");
+          else Dic = AddonAmount.toString().replace(",", "").replace("$", "");
+          TotalDiscount += parseFloat(Dic);
+        }
+
+        let { LnProgActiveId, LoanAmt } =
+          ActiveProduct[1]["LoanProgramDetails"][0];
+        let BasePoints = 0,
+          BaseAmt = 0;
+        for (let i = 0; i < Rates.length; i++) {
+          for (let j = 0; j < LockPeriod.length; j++) {
+            BasePoints = fnGetBasePoints(
+              Rates[i].IntRateID,
+              LockPeriod[j].LockPeriodID,
+              Rates,
+              ActiveProduct[4]["LockPeriod"]
+            );
+            if (BasePoints) {
+              // # 18973
+              if (false) {
+                //Global_IsCorrLoan
+                var BasePoint2 = (BasePoints - 100) * -1;
+                BaseAmt =
+                  (parseFloat(LoanAmt) * parseFloat(BasePoint2)) / 100.0;
+              } else {
+                BaseAmt =
+                  (parseFloat(cleanValue(LoanAmt, 1)) *
+                    parseFloat(BasePoints)) /
+                  100.0;
+              }
+
+              //BaseAmt = formatCurrency(BaseAmt);
+              if (BasePoints.toString().indexOf("-") != -1)
+                BasePoints = `(${BasePoints.toString()
+                  .replace("-", "")
+                  .replace("%", "")})`;
+
+              OrgBaseAmt = BaseAmt.toString().replace(",", "").replace("$", "");
+              OrgBaseAmt = parseFloat(OrgBaseAmt) + parseFloat(TotalAdjust);
+              if (BasePoints != "1000.000") {
+                CombineArr.push({
+                  LockPeriodDays: LockPeriod[j].LockPeriodDesc,
+                  IntRate: formatPercentage(Rates[i].Rate),
+                  BasePoints: BasePoints + "%",
+                  BaseAmt: formatCurrency(fnRoundUpValue(BaseAmt, 2)),
+                  MonthlyPayment: Rates[i].MonthlyPayment,
+                  LockPeriodID: LockPeriod[j].LockPeriodID,
+                  CalAmt: OrgBaseAmt,
+                  IntRateID: Rates[i]["IntRateID"],
+                  LineId: LineIds_[index],
+                  LnProgActiveId: LnProgActiveId,
+                  RateSheetName: Rates[i]["RateSheetName"],
+                });
+              }
             }
           }
         }
-
-        let iDisc = "";
-        if (Disc.toString().indexOf("-") != -1)
-          iDisc = "(" + Disc.toString().replace("-", "") + ")";
-        else iDisc = Disc;
-
-        Adjustmentarr.push({
-          Descript: Addons[j]["Descript"],
-          Rate: Addons[j]["Rate"],
-          Disc: iDisc,
-          AddonAmount: AddonAmount,
-          CondLink: Addons[j]["CondLink"],
-          AdjustmentJSON: JSON.parse(Addons[j]["AdjustmentJSON"] || "[]"),
-        });
-
-        if (AddonAmount.indexOf("(") != -1)
-          TotalAdjust = -+AddonAmount.replace("(", "")
-            .replace(")", "")
-            .replace(",", "")
-            .replace("$", "");
-        else TotalAdjust = AddonAmount.replace(",", "").replace("$", "");
-        TotalAdjust += parseFloat(TotalAdjust);
-        let Dic = "0";
-        if (AddonAmount.toString().indexOf("(") != -1)
-          Dic = AddonAmount.replace("(", "-")
-            .replace(")", "")
-            .replace(",", "")
-            .replace("$", "");
-        else Dic = AddonAmount.toString().replace(",", "").replace("$", "");
-        TotalDiscount += parseFloat(Dic);
+        CombineArr_Common = {
+          ...CombineArr_Common,
+          [LineIds_[index]]: CombineArr,
+        };
+        Adjustmentarr_Common = {
+          ...Adjustmentarr_Common,
+          [LineIds_[index]]: Adjustmentarr,
+        };
+        TotalDiscounts = {
+          ...TotalDiscounts,
+          [LineIds_[index]]: TotalDiscount,
+        };
+        NoteRate = {
+          ...NoteRate,
+          [LineIds_[index]]: NoteRateRow[0],
+        };
+        LockPeriod_Common = {
+          ...LockPeriod_Common,
+          [LineIds_[index]]: ActiveProduct[4]["LockPeriod"],
+        };
       }
-
-      let { LnProgActiveId, LoanAmt } =
-        ActiveProduct[1]["LoanProgramDetails"][0];
-      let BasePoints = 0,
-        BaseAmt = 0;
-      for (let i = 0; i < Rates.length; i++) {
-        for (let j = 0; j < LockPeriod.length; j++) {
-          BasePoints = fnGetBasePoints(
-            Rates[i].IntRateID,
-            LockPeriod[j].LockPeriodID,
-            Rates,
-            ActiveProduct[4]["LockPeriod"]
-          );
-          if (BasePoints) {
-            // # 18973
-            if (false) {
-              //Global_IsCorrLoan
-              var BasePoint2 = (BasePoints - 100) * -1;
-              BaseAmt = (parseFloat(LoanAmt) * parseFloat(BasePoint2)) / 100.0;
-            } else {
-              BaseAmt =
-                (parseFloat(cleanValue(LoanAmt, 1)) * parseFloat(BasePoints)) /
-                100.0;
-            }
-
-            //BaseAmt = formatCurrency(BaseAmt);
-            if (BasePoints.toString().indexOf("-") != -1)
-              BasePoints = `(${BasePoints.toString()
-                .replace("-", "")
-                .replace("%", "")})`;
-
-            OrgBaseAmt = BaseAmt.toString().replace(",", "").replace("$", "");
-            OrgBaseAmt = parseFloat(OrgBaseAmt) + parseFloat(TotalAdjust);
-            if (BasePoints != "1000.000") {
-              CombineArr.push({
-                LockPeriodDays: LockPeriod[j].LockPeriodDesc,
-                IntRate: formatPercentage(Rates[i].Rate),
-                BasePoints: BasePoints + "%",
-                BaseAmt: formatCurrency(fnRoundUpValue(BaseAmt, 2)),
-                MonthlyPayment: Rates[i].MonthlyPayment,
-                LockPeriodID: LockPeriod[j].LockPeriodID,
-                CalAmt: OrgBaseAmt,
-                IntRateID: Rates[i]["IntRateID"],
-                LineId: LineIds_[index],
-                LnProgActiveId: LnProgActiveId,
-                RateSheetName: Rates[i]["RateSheetName"],
-              });
-            }
-          }
-        }
-      }
-      CombineArr_Common = {
-        ...CombineArr_Common,
-        [LineIds_[index]]: CombineArr,
-      };
-      Adjustmentarr_Common = {
-        ...Adjustmentarr_Common,
-        [LineIds_[index]]: Adjustmentarr,
-      };
-      TotalDiscounts = {
-        ...TotalDiscounts,
-        [LineIds_[index]]: TotalDiscount,
-      };
-      NoteRate = {
-        ...NoteRate,
-        [LineIds_[index]]: NoteRateRow[0],
-      };
-      LockPeriod_Common = {
-        ...LockPeriod_Common,
-        [LineIds_[index]]: ActiveProduct[4]["LockPeriod"],
-      };
-    }
     }
     //console.log("fnAddDummyRow =>", fnAddDummyRow(CombineArr_Common, LineIds_));
     return {
@@ -1604,7 +1607,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
       console.log("Error in fnGetBasePoints function");
     }
   };
-  const handleLenderComp = (val, Rows,IncludeLenderComp) => {
+  const handleLenderComp = (val, Rows, IncludeLenderComp) => {
     let iProduct = [];
     if (val === "PageLoad") {
       iProduct = Rows;
@@ -1644,12 +1647,9 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
         });
         // Items["RateChosen"] = `${LenderFinalPoint} | ${lenderFinalAmt} ${RateChosen}`;
       }
-      if(val == 'PageLoad'){
-        setLenderComp(IncludeLenderComp != 1?true:false);
-
-      }
-      else{
-        
+      if (val == "PageLoad") {
+        setLenderComp(IncludeLenderComp != 1 ? true : false);
+      } else {
         setLenderComp(!LenderComp);
       }
     }
@@ -1736,7 +1736,9 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
     for (let index = 0; index < worseCaseRates_1.length; index++) {
       let Row = "";
       let Point_1 = cleanValue(worseCaseRates_1[index]["BaseAmt"]);
-      let Point_2 = cleanValue(worseCaseRates_2?.[index]?.["BaseAmt"] || "0.00");
+      let Point_2 = cleanValue(
+        worseCaseRates_2?.[index]?.["BaseAmt"] || "0.00"
+      );
       let NoteRateRow_1 = handleNoteRate(
         JSON.parse(AdjustmentJSON_1 || "[]"),
         worseCaseRates_1[index]["IntRate"]
@@ -1768,8 +1770,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
       finalWCRates.push(Row);
     }
     // finalWCRates = finalWCRates.filter(e => e['IntRate'] !=omitRate && !e['IsDummy'])
-    if(worseCaseRates_2.length == 0)
-      finalWCRates = worseCaseRates_1
+    if (worseCaseRates_2.length == 0) finalWCRates = worseCaseRates_1;
     return {
       finalWCRates,
       worseCaseLineId_1,
@@ -1791,10 +1792,10 @@ const LoanProducts = ({ Data, SearchInfo, handleLock,handleLoanProducts }) => {
     }
     return nearestRate || [];
   };
-  const handleReset =()=>{
-    handleLoanProducts([])
-    setRawLoanProducts([])
-  }
+  const handleReset = () => {
+    handleLoanProducts([]);
+    setRawLoanProducts([]);
+  };
   // ========================================DEVELOPMENT BLOCK =========================
   function onRenderCallback(
     id, // Profiler ID

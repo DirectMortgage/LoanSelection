@@ -532,6 +532,7 @@ const LockConfirmation = (props) => {
       val = comppointsadj.indexOf("(") != -1 ? "Credit" : "Charge";
     else if (name == "Adjustment")
       val = value.indexOf("-") != -1 ? `(${value.replace("-", "")})` : value;
+
     return val;
   };
   const handleOnchangeDetails = (name, value, section) => {
@@ -831,7 +832,7 @@ const LockConfirmation = (props) => {
 
     BaseRate = parseFloat(comprateadj) - parseFloat(totaladjrate);
     BasePoints = parseFloat(comppointsadj) - parseFloat(totaladjpoints);
-    BasePoints = BasePoints.toFixed(4)
+    BasePoints = BasePoints.toFixed(4);
     selWorseCase = selWorseCase || 0;
     let strXML =
       '<Root><BaseData EmpNum="' +
@@ -860,7 +861,7 @@ const LockConfirmation = (props) => {
       SupNotes +
       '"';
     strXML += "/></Root>";
-    console.log({strXML})
+    console.log({ strXML });
     let obj = {
       Loanid: contextDetails["LoanId"],
       strXml: strXML,
@@ -1227,21 +1228,21 @@ const LockConfirmation = (props) => {
         //   SupervisorEdit: false,
         //   saveInvestor: false,
         // });
-          
-          handleDoLockRateProcess(
-            0,
-            contextDetails["EmpNum"],
-            "",
-            "",
-            "",
-            contextDetails["LoanId"],
-            0,
-            "",
-            contextDetails["queryString"]["SessionId"],
-            "",
-            2, // Lock confirmation
-            1
-          );
+
+        handleDoLockRateProcess(
+          0,
+          contextDetails["EmpNum"],
+          "",
+          "",
+          "",
+          contextDetails["LoanId"],
+          0,
+          "",
+          contextDetails["queryString"]["SessionId"],
+          "",
+          2, // Lock confirmation
+          1
+        );
       }
     }
     let investorWait = await handleInvestorSave();
@@ -3054,6 +3055,20 @@ const LockConfirmation = (props) => {
       parentCancelEle2.parentNode.nextElementSibling.style.display = Cancel;
     } catch (error) {}
   };
+  const handleManualLoanSelection = () => {
+    let url = `../../../BorrowerApplication/Presentation/Webforms/Loan_ManualProgramInput.aspx?LoanID=${
+      contextDetails["LoanId"]
+    }&SessionId=${contextDetails["queryString"]["SessionId"]}&EmpNum=${
+      contextDetails["EmpNum"]
+    }&LnAmt=${cleanValue(
+      LockDetails["totalloanamt"]
+    )}&rnd=${Math.random()}`;
+    window.open(
+      url,
+      "LenderCompPlan",
+      "status=0,toolbar=0,menubar=0,resizable=yes,scrollbars=yes,width=1000px,height=650px,"
+    );
+  };
   //======================================= Function declaration Ends ===============================================
   let menuOption = [
     {
@@ -3148,8 +3163,15 @@ const LockConfirmation = (props) => {
     },
     {
       Name: "Rate Lock History",
-      onPress: () => {},
+      onPress: () => {handleLockHistoryOpen()},
       icon: "LockHistory",
+      from: "Ionicons",
+      size: 22,
+    },
+    {
+      Name: "Manual Loan Program Selection",
+      onPress: () => {handleManualLoanSelection() },
+      icon: "SuperviserEdit",
       from: "Ionicons",
       size: 22,
     },
@@ -3575,15 +3597,25 @@ const LockConfirmation = (props) => {
                               <CustomText
                                 style={[
                                   styles["MidText"],
-                                  { flex: 1, textAlign: "center", color:
-                                  row["rate"].toString().indexOf("-") !=
-                                  -1
-                                    ? "#88AB35"
-                                    : "#B73333", },
+                                  {
+                                    flex: 1,
+                                    textAlign: "center",
+                                    color:
+                                      row["rate"].toString().indexOf("-") != -1
+                                        ? "#88AB35"
+                                        : "#B73333",
+                                  },
                                 ]}
                               >
                                 {fnCalculateValue(
-                                  "Adjustment",formatPercentage(row["rate"], 3))}
+                                  "Adjustment",
+                                  formatPercentage(
+                                    row["rate"].length >= 6
+                                      ? parseFloat(row["rate"]) * 100
+                                      : row["rate"],
+                                    4
+                                  )
+                                )}
                               </CustomText>
                               <CustomText
                                 style={[
@@ -5705,9 +5737,9 @@ const LockConfirmation = (props) => {
                                         4
                                       );
                                       //if (val.indexOf("-") != -1) {
-                                        val = `(${val})`;
-                                        val = val.replace("-", "");
-                                    //  }
+                                      val = `(${val})`;
+                                      val = val.replace("-", "");
+                                      //  }
                                       handleOnchangeDetails(
                                         "WarmHotLeadAdj",
                                         val,
@@ -6223,6 +6255,5 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
 });
-
 
 export default LockConfirmation;

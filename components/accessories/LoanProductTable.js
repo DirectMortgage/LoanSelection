@@ -15,6 +15,7 @@ import {
   fnGetIndex,
   handleConstructXML,
   handleAPI_,
+  handleSelectQuote,
 } from "./CommonFunctions";
 import AdjustmentDetails from "../AdjustmentDetails";
 import LenderRank from "../LenderRank";
@@ -44,7 +45,7 @@ const LoanProductTable = (props) => {
     handleRunAUS,
     handleLock,
     handleLoanProducts,
-    handleReset
+    handleReset,
   } = props;
   let GloLoanId = 0,
     GloCustId = 0;
@@ -174,22 +175,21 @@ const LoanProductTable = (props) => {
       return;
     }
     let { LineId, LockPeriodID } = result;
-    let changeRateXML = ''
-    if(contextDetails['ChangeRate']||contextDetails['FloatDown']){
-    if(!contextDetails['changeRateXML'] ){
-      changeRateXML = handleConstructXML(contextDetails['ChangeRateJson'])
-      setContextDetails((prevContext) => {
-        return {
-          ...prevContext,
-          changeRateXML: changeRateXML,
-        };
-      });
+    let changeRateXML = "";
+    if (contextDetails["ChangeRate"] || contextDetails["FloatDown"]) {
+      if (!contextDetails["changeRateXML"]) {
+        changeRateXML = handleConstructXML(contextDetails["ChangeRateJson"]);
+        setContextDetails((prevContext) => {
+          return {
+            ...prevContext,
+            changeRateXML: changeRateXML,
+          };
+        });
+      } else {
+        changeRateXML = contextDetails["changeRateXML"];
+      }
     }
-    else{
-      changeRateXML = contextDetails['changeRateXML']
-    }
-  }
-    
+
     let obj = {
       LineId,
       IntRate: result["Row"]["IntRateID"],
@@ -356,18 +356,39 @@ const LoanProductTable = (props) => {
         fnLockConfirmationModalValidation(checkPreQual, LineId);
       }
     } else {
-      if (contextDetails["OnloadProcess"] == "PQ" || (contextDetails['showSSNPrompt'] && action.indexOf('Lock')!= -1)) {
-        let modalFor = contextDetails["OnloadProcess"] == "PQ" ? 'PQ' :contextDetails['showSSNPrompt']  && action.indexOf('Lock')!= -1 ?'SSN':'PQ'
-        handleBorInfoModalForLock(action, LineId, "Modal",{},modalFor);
+      if (
+        contextDetails["OnloadProcess"] == "PQ" ||
+        (contextDetails["showSSNPrompt"] && action.indexOf("Lock") != -1)
+      ) {
+        let modalFor =
+          contextDetails["OnloadProcess"] == "PQ"
+            ? "PQ"
+            : contextDetails["showSSNPrompt"] && action.indexOf("Lock") != -1
+            ? "SSN"
+            : "PQ";
+        handleBorInfoModalForLock(action, LineId, "Modal", {}, modalFor);
       } else handleLockAfterBorInfoValidation(action, LineId);
     }
   };
 
-  const handleBorInfoModalForLock = async (action, LineId, Type, obj,modalFor) => {
+  const handleBorInfoModalForLock = async (
+    action,
+    LineId,
+    Type,
+    obj,
+    modalFor
+  ) => {
     if (Type == "Modal") {
-      setOpen({ ...Open, BorInfo: !Open["BorInfo"],LockRate:false, action, LineId ,modalFor});
+      setOpen({
+        ...Open,
+        BorInfo: !Open["BorInfo"],
+        LockRate: false,
+        action,
+        LineId,
+        modalFor,
+      });
     } else if (Type == "OnChange") {
-      let { name, value,index=0 } = obj;
+      let { name, value, index = 0 } = obj;
 
       let additionalObj = {};
       if (["FirstName", "LastName", "SSN", "TBD"].includes(name)) {
@@ -468,23 +489,22 @@ const LoanProductTable = (props) => {
       if (contextDetails["TBD"] != 1) handleTBD(1);
     }
     try {
-      let borInfo = contextDetails['InputData']['DataIn'][1]['BorrInfo']
-      let blockSaving = false
-      borInfo.map((e)=> {
-        if(e['SSN'].length!= 11){
-          blockSaving = true
+      let borInfo = contextDetails["InputData"]["DataIn"][1]["BorrInfo"];
+      let blockSaving = false;
+      borInfo.map((e) => {
+        if (e["SSN"].length != 11) {
+          blockSaving = true;
         }
-      })
-      if(blockSaving && action.indexOf('Lock')!= -1) {
+      });
+      if (blockSaving && action.indexOf("Lock") != -1) {
         setContextDetails((prevContext) => {
           return {
             ...prevContext,
             stopSSNSave: true,
           };
         });
-        return
-      }
-      else{
+        return;
+      } else {
         setContextDetails((prevContext) => {
           return {
             ...prevContext,
@@ -492,9 +512,7 @@ const LoanProductTable = (props) => {
           };
         });
       }
-    } catch (error) {
-    
-    }
+    } catch (error) {}
     console.log("saving the searching info ==>", contextDetails["InputData"]);
     setContextDetails((prevContext) => {
       return {
@@ -525,7 +543,6 @@ const LoanProductTable = (props) => {
         contextDetails["InputData"]["DataIn"][0]["RootObjects"][0];
       let { SubjectAddress, SubjectCity, SubjectState, SubjectZip } =
         contextDetails["InputData"]["DataIn"][2]["PropertyInfo"][0];
-
 
       if (SelectFlag === "1") {
         if (
@@ -814,8 +831,12 @@ const LoanProductTable = (props) => {
     let { value } = strXML["children"][0];
 
     // If Locked allow to lock without validation
-    if(contextDetails['isLocked'] == 1){
-      let LockType = contextDetails['ChangeRate']?"ChangeIntrestRate":contextDetails['FloatDown']?'FloatDown':'';
+    if (contextDetails["isLocked"] == 1) {
+      let LockType = contextDetails["ChangeRate"]
+        ? "ChangeIntrestRate"
+        : contextDetails["FloatDown"]
+        ? "FloatDown"
+        : "";
       handleDoLockRateProcess(
         LineId,
         EmpNum,
@@ -830,8 +851,7 @@ const LoanProductTable = (props) => {
         1, // Process Type
         1 // Need JSON
       );
-    }
-    else{
+    } else {
       if (Status == 1) {
         let istrXML = await handleLockRateValidation_DBChecks(
           LineId,
@@ -867,7 +887,7 @@ const LoanProductTable = (props) => {
             Msg =
               "Error occurred in locking the rate and selecting the loan program. Please try again or contact support@directcorp.com for additional assistance";
           // );
-  
+
           let component = (
             <View style={{ gap: 20 }}>
               <View
@@ -994,7 +1014,7 @@ const LoanProductTable = (props) => {
           }
           if (WarnStatus == 99) {
             // if all validations are good - then will call the Actual Lock Rate process
-  
+
             let LockType = "";
             handleDoLockRateProcess(
               LineId,
@@ -1154,8 +1174,13 @@ const LoanProductTable = (props) => {
       name: "DoLockRateProcess",
       params: obj,
     }).then((response) => {
-   // handleLoanProducts([])
-    handleReset()
+      // handleLoanProducts([])
+      try {
+        handleSelectQuote(LineId, SessionId);
+      } catch (error) {
+        console.log("Error in Selecting MI Quote");
+      }
+      handleReset();
       setContextDetails((prevContext) => {
         return {
           ...prevContext,
@@ -1251,14 +1276,16 @@ const LoanProductTable = (props) => {
             "&HideNav=1" +
             "&from=NewLoan_LoanAppTab" +
             "&IsReactNative=1  ";
-            if(contextDetails['isPublicRunScenario']){
-              window.open(url, "PQ", "width=1200,height=900,resizable=1,scrollbars=1");
-              window.parent.GoToHome()
-            }
-            else{
-
-              window.document.location.href = url;
-            }
+          if (contextDetails["isPublicRunScenario"]) {
+            window.open(
+              url,
+              "PQ",
+              "width=1200,height=900,resizable=1,scrollbars=1"
+            );
+            window.parent.GoToHome();
+          } else {
+            window.document.location.href = url;
+          }
 
           return;
         }
@@ -1309,6 +1336,20 @@ const LoanProductTable = (props) => {
       params: obj,
     }).then((response) => {
       // console.log("RateLockOption_SelectOnly == > New Loan Id == >", LoanId);
+      try {
+        handleSelectQuote(LineId, SessionId);
+      } catch (error) {
+        console.log("Error in Selecting MI Quote");
+      }
+
+      setContextDetails((prevContext) => {
+        return {
+          ...prevContext,
+          currentProcess: "RateLockOption_SelectOnly",
+          showSpinner: false,
+          lockingProgress: "",
+        };
+      });
       let Msg = false;
       if (contextDetails["OnloadProcess"] == "PQ") {
         if (

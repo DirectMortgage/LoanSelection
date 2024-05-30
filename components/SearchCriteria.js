@@ -37,6 +37,7 @@ import {
   handleGetCompNameByCompID,
   handleAPI_,
   handleWholeSaleRights,
+  handleProceedRunMIQuote,
 } from "./accessories/CommonFunctions";
 import DropDownButton from "./accessories/DropDownButton";
 import { web, android, ios } from "./accessories/Platform";
@@ -445,7 +446,6 @@ const SearchCriteria = ({
     }
   }, [LoanDetails]);
 
-
   //=================================== Function declarations Begins ===================================
   let VAMilitaryOption = [
     { TypeDesc: "None", TypeOption: "8" },
@@ -804,14 +804,14 @@ const SearchCriteria = ({
       // setTimeout(() => {
       //   handleOnChangeCalc('Appraised Value', AppraisedVal);
       // }, 10);
-    } 
+    }
     // else if (name == "MI Type") {
     //   let {
     //     ["Single Premium MI"]: PreMI,
     //     ["MI Type"]: MIType,
     //   } = searchDetails;
     //   let  additionalObj ={}, lastSelected = '';
-        
+
     //   PreMI = PreMI.split(",");
     //   MIType = value["value"]?.toString().split(",");
     //  lastSelected = MIType[MIType.length-1]
@@ -839,7 +839,7 @@ const SearchCriteria = ({
     //     ...searchDetails,
     //     ...additionalObj,
     //   });
-    // } 
+    // }
     else {
       setSearchDetails({
         ...searchDetails,
@@ -958,7 +958,7 @@ const SearchCriteria = ({
           CompName: RootObjects["compname"],
         };
       });
-     // let CompName = await handleWholeSaleRights(value);
+      // let CompName = await handleWholeSaleRights(value);
 
       setContextDetails((prevContext) => {
         return {
@@ -1545,7 +1545,16 @@ const SearchCriteria = ({
     // for MI Quote
     try {
       if (parseFloat(cleanValue(searchDetails["LTV"])) > 80) {
-        let res = await handleOpenPopUp_MIQuote(contextDetails["LoanId"], 0);
+        //let res = await handleOpenPopUp_MIQuote(contextDetails["LoanId"], 0); //CMS_SP_isMIQuote_Exists
+        let res = await handleProceedRunMIQuote(
+          contextDetails["LoanId"],
+          searchDetails["FICO Score"]||'',
+          cleanValue(searchDetails["Loan Amount 1st"]),
+          cleanValue(searchDetails["Loan Amount 2nd"]),
+          searchDetails["LTV"],
+          searchDetails["CLTV"]
+        );
+        res = res.split("~");
         let productType = searchDetails["Product Type"].split(",");
         const valuesToCheck = ["16", "2", "9"]; //FHA/VA/USDA
         let exists = false;
@@ -1555,11 +1564,7 @@ const SearchCriteria = ({
             break;
           }
         }
-        if (
-          res == 1 &&
-          (!exists || productType.includes("5")) &&
-          searchDetails["initiateMIQuote"]
-        ) {
+        if ((res?.[0] || 0) == 1 && (!exists || productType.includes("5"))) {
           let obj_ = {
             LoanID: contextDetails["LoanId"],
             SessionID: contextDetails["queryString"]["SessionId"],
@@ -3207,6 +3212,19 @@ const SearchCriteria = ({
       visible: true,
     },
     {
+      Name: "Manual Loan Program Selection",
+      onPress: () => {
+        handleManualLoanSelection();
+        handleMenu();
+      },
+      icon: "TitlePricing",
+      from: "MaterialIcons",
+      size: 20,
+      visible:
+        // contextDetails["isPublicRunScenario"] ||
+        contextDetails["OnloadProcess"] == "PQ" ? false : true,
+    },
+    {
       Name: "Get Title Pricing",
       onPress: () => {
         handleGetTitlePricing();
@@ -3345,7 +3363,7 @@ const SearchCriteria = ({
         }}
       >
         {
-        //contextDetails["LockingFrom"] != "PQ" &&
+          //contextDetails["LockingFrom"] != "PQ" &&
           contextDetails["IsLocked"] == 1 && (
             <View
               style={{
@@ -3405,7 +3423,7 @@ const SearchCriteria = ({
                     };
                   });
                   setLoanProducts([]);
-      handleLoanProducts([]);
+                  handleLoanProducts([]);
                 }}
               />
               {!contextDetails["ChangeLoanProgram"] && (
@@ -3425,7 +3443,8 @@ const SearchCriteria = ({
                 </View>
               )}
             </View>
-          )}
+          )
+        }
         <View>
           <ChangeCompany
             Visible={modalOpen["CompSearch"]}

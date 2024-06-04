@@ -915,8 +915,16 @@ const handleGetUpdatedPaymentSection = (RunID, Lineid) => {
     console.log("GetUpdatedPaymentSection ===>", response);
   });
 };
-const fnRemoveKeyFromObject = ()=>{
-  
+
+const handleUpdateLenderComp = (EmpNum, Value, Flag)=>{
+  let obj = { EmpNum, Value, Flag };
+  handleAPI({
+    name: "UpdateLenderComp",
+    params: obj,
+  }).then((response) => {
+    response =JSON.parse(response)
+    console.log("UpdateLenderComp ===>", response);
+  });
 }
 export {
   handleAPI,
@@ -961,4 +969,5 @@ export {
   fnSortBy,
   handleGetWholesaleRights,
   handleGetUpdatedPaymentSection,
+  handleUpdateLenderComp
 };

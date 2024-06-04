@@ -176,6 +176,7 @@ const SearchCriteria = ({
         let {
           LienPosition,
           NoOfUnits,
+          
           OccupancyType,
           PropertyTypeType,
           SubjectAddress,
@@ -365,7 +366,7 @@ const SearchCriteria = ({
             "Lock Period Days": LockPeriod,
             "Existing Government Loan": ExistingGovtLoan,
             "Other Options": 0,
-            "Compensation Type": 0, //IsLenderCompPlanExists
+            "Compensation Type": searchDetails['Compensation Type']|| 0,//0, //IsLenderCompPlanExists
             "Loan Purpose": LoanPurpose,
             "Purchase Price": formatCurrency(PurchasePrice, 0),
             "Appraised Value": formatCurrency(AppraisalPrice, 0),
@@ -437,6 +438,7 @@ const SearchCriteria = ({
             SSN,
             CRIDs,
             showSSNPrompt,
+            LoanOfficerId: LoanOfficer,
             InputData: { DataIn: [...LoanInfo] },
           };
         });
@@ -1108,6 +1110,7 @@ const SearchCriteria = ({
               CompNum: compNum,
             };
           });
+          handleSaveLoanOfficer(contextDetails["LoanId"],value)
         }
       }
     });
@@ -1949,6 +1952,8 @@ const SearchCriteria = ({
         else fnGetBrokerSearchListByEmpName(contextDetails["EmpType"], value);
       } else if (type == "Select") {
         fnSaveBroker(value,from);
+        setLoanProducts([]);
+        handleLoanProducts([]);
       }
     }
   };
@@ -2131,7 +2136,12 @@ const SearchCriteria = ({
         ...isMenuOpen,
         EditLO: !isMenuOpen["EditLO"],
       });
-      // console.log("Loan Officer saved!!!");
+      setContextDetails((prevContext) => {
+        return {
+          ...prevContext,
+          LoanOfficerId: LOId,
+        };
+      });
     });
   };
   const handleGetLOFeesinRate = (LOId) => {
@@ -2141,6 +2151,7 @@ const SearchCriteria = ({
       params: obj,
     }).then((response) => {
       //console.log("getLOFeesinRate ===>", response);
+      
     });
   };
   const handleRealLoan = async (LoanInfo, LineId) => {
@@ -2178,6 +2189,7 @@ const SearchCriteria = ({
         return {
           ...prevContext,
           SearchedInfo: InputData,
+          IsLoanProductGridActive: true
         };
       });
     }
@@ -2896,6 +2908,10 @@ const SearchCriteria = ({
         if (contextDetails["TBD"] != 1) handleTBD(1);
       }
 
+      if(searchDetails['Compensation Type'] == 1){
+        handleUpdateLenderComp(contextDetails['EmpNum'],1,1)
+      }
+
       return InputData;
     } catch (error) {
       setModalOpen({
@@ -2964,6 +2980,23 @@ const SearchCriteria = ({
       "status=0,toolbar=0,menubar=0,resizable=yes,scrollbars=yes,width=1000px,height=650px,"
     );
   };
+  const handleUpdateLenderComp = (EmpNum, Value, Flag)=>{
+    let obj = { EmpNum, Value, Flag };
+    handleAPI({
+      name: "UpdateLenderComp",
+      params: obj,
+    }).then((response) => {
+      response =JSON.parse(response)
+      let UpdateLenderComp = response['Table'][0]['Column1']
+      setContextDetails((prevContext) => {
+        return {
+          ...prevContext,
+          UpdateLenderComp: UpdateLenderComp,
+        };
+      });
+      console.log("UpdateLenderComp ===>", response);
+    });
+  }
   //=================================== Function declarations Ends=======================================
   let options = [
     { label: "Option 1", value: "1" },

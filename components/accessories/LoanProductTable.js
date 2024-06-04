@@ -133,8 +133,8 @@ const LoanProductTable = (props) => {
         PropOther,
         PropRETaxes,
       };
-      let {Run} = Product[0]
-      handleGetUpdatedPaymentSection(Run,LineId)
+      let { Run } = Product[0];
+      handleGetUpdatedPaymentSection(Run, LineId);
       setOpen({ ...Open, PITI: type, Result: Result, LineId, LPA_CommonData });
     } else {
       setOpen({ ...Open, PITI: type }); // false
@@ -341,11 +341,11 @@ const LoanProductTable = (props) => {
       }
       let checkPreQual = await IsPreQualLoan(LoanId, 0);
       let isPreQual = await IsPreQualLoan(LoanId, EmpNum);
-      let showSSNPrompt = false
-      if(contextDetails['SSN'].length){
-        contextDetails['SSN'].forEach((e =>{
-if( e.length < 8) showSSNPrompt = true
-        }))
+      let showSSNPrompt = false;
+      if (contextDetails["SSN"].length) {
+        contextDetails["SSN"].forEach((e) => {
+          if (e.length < 8) showSSNPrompt = true;
+        });
       }
       setContextDetails((prevContext) => {
         return {
@@ -487,9 +487,31 @@ if( e.length < 8) showSSNPrompt = true
     }
   };
   const handleLockAfterBorInfoValidation = async (action, LineId) => {
+    let InputParams = contextDetails["InputData"];
+    if (InputParams["DataIn"].length > 6) {
+      let index = fnGetIndex(InputParams["DataIn"], "BorrInfo");
+      InputParams["DataIn"][index]["BorrInfo"].forEach((e) => {
+        if (Object.keys(e).includes("firstTimeHomeBuyer")) {
+          let val = e["firstTimeHomeBuyer"];
+          e["firstTimeHomeBuyer"] = isNaN(Number(val))
+            ? val === "No"
+              ? 0
+              : val === "Yes"
+              ? 1
+              : val
+            : Number(val);
+        }
+      });
+      index = fnGetIndex(InputParams["DataIn"], "LoanParamInfo");
+      InputParams["DataIn"][index]["LoanParamInfo"][0]["LoanOfficer"] =
+        contextDetails["LoanOfficerId"];
+      index = fnGetIndex(InputParams["DataIn"], "RootObjects");
+      InputParams["DataIn"][index]["RootObjects"][0]["FromNewRateLock"] =
+        contextDetails["OnloadProcess"] == "PQ" ? 2 : 1;
+    }
     let obj = {
       LoanID: contextDetails["LoanId"],
-      SaveJson: JSON.stringify(contextDetails["InputData"] || ""),
+      SaveJson: JSON.stringify(InputParams || ""),
     };
     let propertyAddress =
       contextDetails["InputData"]?.["DataIn"]?.[2]?.["PropertyInfo"]?.[0]?.[

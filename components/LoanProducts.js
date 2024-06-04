@@ -17,6 +17,7 @@ import {
   sleep,
   fnRemoveSpecChar,
   fnAddDummyRow,
+  handleUpdateLenderComp,
 } from "./accessories/CommonFunctions";
 
 const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
@@ -28,7 +29,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
   const [ProductOpen, setProductOpen] = useState({});
   const [ActiveRate, setActiveRate] = useState({ Row: { IntRate: "6.000" } });
   const [ProductInfo, setProductInfo] = useState({});
-  const [LenderComp, setLenderComp] = useState(true);
+  const [LenderComp, setLenderComp] = useState(false);
   //console.log("Loan Products ===>>", Data);
   useEffect(() => {
     if (Data["DataOut"] !== undefined) {
@@ -362,7 +363,11 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
 
     //===================================== Updating Lender Comp ========================
     setTimeout(() => {
-      handleLenderComp("PageLoad", LoanProduct, Glo_IncludeLenderComp);
+      handleLenderComp(
+        "PageLoad",
+        LoanProduct,
+        contextDetails["UpdateLenderComp"] || 0
+      ); //Glo_IncludeLenderComp
     }, 10);
     //===================================== Updating Lender Comp ========================
     //======================================= MULTI LENDER =====================================
@@ -1067,7 +1072,8 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
         if (obj["parallelLineId"] || 0 == obj["LineId"]) {
           let { IsLenderComp, LenderCompAmt, LenderCompPoints } =
             updatedItems[Index];
-          if (IsLenderComp == 0) {
+          // if (IsLenderComp == 0) {
+          if (!LenderComp) {
             LenderCompAmt = 0;
             LenderCompPoints = 0;
           }
@@ -1608,9 +1614,11 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
     }
   };
   const handleLenderComp = (val, Rows, IncludeLenderComp) => {
-    let iProduct = [];
+    let iProduct = [],
+      from = "";
     if (val === "PageLoad") {
       iProduct = Rows;
+      from = val;
       val = true;
     } else {
       iProduct = LoanProducts;
@@ -1647,11 +1655,18 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
         });
         // Items["RateChosen"] = `${LenderFinalPoint} | ${lenderFinalAmt} ${RateChosen}`;
       }
-      if (val == "PageLoad") {
-        setLenderComp(IncludeLenderComp != 1 ? true : false);
-      } else {
-        setLenderComp(!LenderComp);
-      }
+    }
+    if (from == "PageLoad") {
+      setLenderComp(IncludeLenderComp == 1 ? true : false);
+    } else {
+      setLenderComp(!LenderComp);
+      handleUpdateLenderComp(contextDetails["EmpNum"], !LenderComp ? 1 : 0, 1);
+      setContextDetails((prevContext) => {
+        return {
+          ...prevContext,
+          UpdateLenderComp: !LenderComp ? 1 : 0,
+        };
+      });
     }
   };
   const fnCalcLenderComp = (

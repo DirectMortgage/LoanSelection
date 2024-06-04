@@ -11,6 +11,7 @@ import {
   handleAPI,
   handleGetEmpPreQualLoan,
   handleGetSessionData,
+  handleWholeSaleRights,
   queryStringToObject,
 } from "./accessories/CommonFunctions";
 import LockConfirmation from "./LockConfirmation";
@@ -56,6 +57,7 @@ const LoanSelection = (props) => {
         icon: false,
       });
     }
+    let wholeSaleRights = await handleWholeSaleRights(EmpNum);
     setContextDetails((prevContext) => {
       return {
         ...prevContext,
@@ -64,6 +66,7 @@ const LoanSelection = (props) => {
         IsLocked: isLocked,
         LoanId,
         EmpNum,
+        wholeSaleRights :wholeSaleRights||0,
         isLoadedInsideiFrame:
           window.parent.location.href != window.location.href,
         isPublicRunScenario:

@@ -875,19 +875,49 @@ function restrictCharacters(value) {
     return false;
   }
 }
-const handleSelectQuote = (LineId, SessionId) => {
-  let obj = { LineId, SessionId };
+const handleSelectQuote = (
+  LineId,
+  SessionId,
+  Fico,
+  LoanAmount,
+  LoanAmounttwo,
+  LTV,
+  CLTV
+) => {
+  let obj = { LineId, SessionId, Fico, LoanAmount, LoanAmounttwo, LTV, CLTV };
   try {
     handleAPI({
       name: "SelectMIQuote",
       params: obj,
     }).then((response) => {
-      console.log("Selected MI Quote successfully");
+      console.log("Selected MI Quote successfully =>",response);
     });
   } catch (error) {
     console.log("Error in Selecting MI Quote API");
   }
 };
+
+const fnSortBy = (array, key) => {
+  return array.sort((a, b) => {
+    const valueA = parseInt(a[key]);
+    const valueB = parseInt(b[key]);
+
+    return valueA - valueB;
+  });
+};
+
+const handleGetUpdatedPaymentSection = (RunID, Lineid) => {
+  let obj = { RunID, Lineid };
+  handleAPI({
+    name: "GetUpdatedPaymentSection",
+    params: obj,
+  }).then((response) => {
+    console.log("GetUpdatedPaymentSection ===>", response);
+  });
+};
+const fnRemoveKeyFromObject = ()=>{
+  
+}
 export {
   handleAPI,
   formatCurrency,
@@ -928,4 +958,7 @@ export {
   restrictCharacters,
   handleSelectQuote,
   handleProceedRunMIQuote,
+  fnSortBy,
+  handleGetWholesaleRights,
+  handleGetUpdatedPaymentSection,
 };

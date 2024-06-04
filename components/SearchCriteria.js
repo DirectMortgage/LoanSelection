@@ -111,7 +111,7 @@ const SearchCriteria = ({
     "Liabilities ($)": "$0.00",
     "First Time Home Buyer": 0,
     "Term (Months)": "360",
-    "Term (Months)_Bitwise": "64",
+   // "Term (Months)_Bitwise": "64",
     "Lien Position": 1,
     "Lock Period Days": 4,
     "Existing Government Loan": 1,
@@ -249,7 +249,7 @@ const SearchCriteria = ({
           CRIDs = [],
           showSSNPrompt = false;
         if (
-          (Index != -1 && LoanInfo[Index]["BorrInfo"].length > 1) ||
+          (Index != -1 && (LoanInfo[Index]["BorrInfo"].length > 1 && contextDetails['OnloadProcess'] != 'PQ')) ||
           LoanInfo[Index]["BorrInfo"][0]["FirstName"] != ""
         ) {
           let TotalBrrw = [],
@@ -1042,7 +1042,7 @@ const SearchCriteria = ({
       // console.log("TypeOption ====>", TypeOption);
     });
   };
-  const fnGetLoanOfficers = async (flag, value, Process, SelectedLOObj) => {
+  const fnGetLoanOfficers = async (flag, value, Process, SelectedLOObj,from) => {
     let additionalObj = {};
     // if (
     //   (contextDetails["OnloadProcess"] == "PQ" ||
@@ -1081,7 +1081,7 @@ const SearchCriteria = ({
         };
       });
 
-      if (SelectedLOObj) {
+      if (SelectedLOObj && from != 'Comp') {
         additionalObj["LO"] = SelectedLOObj["Id"];
         additionalObj["LOName"] = SelectedLOObj["Name"];
         handleSaveLoanOfficer(contextDetails["LoanId"], SelectedLOObj["Id"]);
@@ -1126,6 +1126,7 @@ const SearchCriteria = ({
         // const typeBitwiseArray = options.map((type) =>
         //   val.includes(type.TypeOption) ? type.TypeBitwise : 0
         // );
+        val = val.toString()
         const typeBitwiseArray = options.map((type) =>
           val.split(",").indexOf(type.TypeOption) != -1 ? type.TypeBitwise : 0
         );
@@ -1744,6 +1745,7 @@ const SearchCriteria = ({
       });
       return;
     }
+    let wholeSaleRights = await handleWholeSaleRights(EmpNum);
     let obj = {
       DataIn: [
         {
@@ -1792,6 +1794,7 @@ const SearchCriteria = ({
             return {
               ...prevContext,
               IsLoanProductGridActive: true,
+              wholeSaleRights:wholeSaleRights||0
             };
           });
           setSearchDetails({
@@ -1930,7 +1933,7 @@ const SearchCriteria = ({
       console.log("Error in handleOnChangeCalc");
     }
   };
-  const handleCompanySearch = (type, value) => {
+  const handleCompanySearch = (type, value, from) => {
     if (["Table", "Modal"].includes(type)) {
       setModalOpen({
         ...modalOpen,
@@ -1945,7 +1948,7 @@ const SearchCriteria = ({
         // else fnGetBrokerSearchListByCompName(value);
         else fnGetBrokerSearchListByEmpName(contextDetails["EmpType"], value);
       } else if (type == "Select") {
-        fnSaveBroker(value);
+        fnSaveBroker(value,from);
       }
     }
   };
@@ -2012,7 +2015,7 @@ const SearchCriteria = ({
     });
   };
 
-  const fnSaveBroker = (Row) => {
+  const fnSaveBroker = (Row,from) => {
     let { UserName, UserNum, SelectedLOObj } = Row;
     if (!UserName) {
       UserName = Row.CompanyName;
@@ -2032,11 +2035,11 @@ const SearchCriteria = ({
       ? contextDetails["NewLoanId"]
       : contextDetails["LoanId"];
 
-    handleSaveBroker(UserNum, LoanId, "ChangeCompany", SelectedLOObj);
+    handleSaveBroker(UserNum, LoanId, "ChangeCompany", SelectedLOObj,from);
     // fnGetLoanOfficers(0, UserNum); //With Company Number
     handleCompanySelection_FessinRate(UserNum);
   };
-  const handleSaveBroker = async (brokerid, LoanId, Process, SelectedLOObj) => {
+  const handleSaveBroker = async (brokerid, LoanId, Process, SelectedLOObj,from) => {
     if (brokerid != 1000) {
       let LenderCompExistCheck = await handleGetLendercompplanCheck(brokerid);
       setContextDetails((prevContext) => {
@@ -2055,7 +2058,7 @@ const SearchCriteria = ({
       params: obj,
     }).then((response) => {
       //console.log("Broker Saved successfully!!!!");
-      fnGetLoanOfficers(0, brokerid, Process, SelectedLOObj);
+      fnGetLoanOfficers(0, brokerid, Process, SelectedLOObj,from);
     });
   };
   const handleCompanySelection_FessinRate = (CompNum) => {

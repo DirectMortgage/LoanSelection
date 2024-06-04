@@ -70,7 +70,7 @@ const CompanyTable = ({ Result, handleSearch }) => {
             backgroundColor: "#428bca",
           }}
           onPress={() => {
-            handleSearch("Select", row);
+            handleSearch("Select", row,'Comp');
           }}
         ></Button>
       ),
@@ -120,7 +120,7 @@ const CompanyTable = ({ Result, handleSearch }) => {
             backgroundColor: "#428bca",
           }}
           onPress={() => {
-            handleSearch("Select", row);
+            handleSearch("Select", row,'Emp');
           }}
         ></Button>
       ),

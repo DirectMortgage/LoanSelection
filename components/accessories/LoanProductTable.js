@@ -16,6 +16,7 @@ import {
   handleConstructXML,
   handleAPI_,
   handleSelectQuote,
+  handleGetUpdatedPaymentSection,
 } from "./CommonFunctions";
 import AdjustmentDetails from "../AdjustmentDetails";
 import LenderRank from "../LenderRank";
@@ -132,6 +133,8 @@ const LoanProductTable = (props) => {
         PropOther,
         PropRETaxes,
       };
+      let {Run} = Product[0]
+      handleGetUpdatedPaymentSection(Run,LineId)
       setOpen({ ...Open, PITI: type, Result: Result, LineId, LPA_CommonData });
     } else {
       setOpen({ ...Open, PITI: type }); // false
@@ -338,11 +341,18 @@ const LoanProductTable = (props) => {
       }
       let checkPreQual = await IsPreQualLoan(LoanId, 0);
       let isPreQual = await IsPreQualLoan(LoanId, EmpNum);
+      let showSSNPrompt = false
+      if(contextDetails['SSN'].length){
+        contextDetails['SSN'].forEach((e =>{
+if( e.length < 8) showSSNPrompt = true
+        }))
+      }
       setContextDetails((prevContext) => {
         return {
           ...prevContext,
           isPreQual,
           checkPreQual,
+          showSSNPrompt,
           currentLockingLineId: LineId,
         };
       });
@@ -1176,7 +1186,20 @@ const LoanProductTable = (props) => {
     }).then((response) => {
       // handleLoanProducts([])
       try {
-        handleSelectQuote(LineId, SessionId);
+        let Fico = 0,
+          LoanAmount = 0,
+          LoanAmounttwo = 0,
+          LTV = 0,
+          CLTV = 0;
+        handleSelectQuote(
+          LineId,
+          SessionId,
+          Fico,
+          LoanAmount,
+          LoanAmounttwo,
+          LTV,
+          CLTV
+        );
       } catch (error) {
         console.log("Error in Selecting MI Quote");
       }
@@ -1337,7 +1360,20 @@ const LoanProductTable = (props) => {
     }).then((response) => {
       // console.log("RateLockOption_SelectOnly == > New Loan Id == >", LoanId);
       try {
-        handleSelectQuote(LineId, SessionId);
+        let Fico = 0,
+          LoanAmount = 0,
+          LoanAmounttwo = 0,
+          LTV = 0,
+          CLTV = 0;
+        handleSelectQuote(
+          LineId,
+          SessionId,
+          Fico,
+          LoanAmount,
+          LoanAmounttwo,
+          LTV,
+          CLTV
+        );
       } catch (error) {
         console.log("Error in Selecting MI Quote");
       }

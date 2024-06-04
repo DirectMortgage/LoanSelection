@@ -10,6 +10,7 @@ import {
   formatPercentage,
   handleAddons,
   context,
+  fnSortBy,
 } from "./CommonFunctions";
 import Icon from "react-native-vector-icons/Ionicons"; //FontAwesome
 import { useContext, useEffect, useState } from "react";
@@ -398,7 +399,7 @@ const RateBandTable = (props) => {
               <View
                 style={[styles["SpaceAround"], { flexDirection: "column" }]}
               >
-                {RateBandsRows[e]?.map((column, index) => {
+                {fnSortBy(RateBandsRows[e],'IntRateID')?.map((column, index) => {
                   return (
                     <View
                       key={index}
@@ -451,8 +452,7 @@ const RateBandTable = (props) => {
                           </CustomText>
                           {ActiveRate?.[CommonId]?.["IntRate"] ==
                             column["IntRate"] &&
-                            (contextDetails["IsWholesaleLender"] == 1 ||
-                              contextDetails["EmpNum"] == "32179" || true) && (
+                            (contextDetails["wholeSaleRights"] != 0) && (
                               <Icon
                                 name="information-circle"
                                 size={16}

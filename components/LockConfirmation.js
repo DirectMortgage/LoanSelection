@@ -378,12 +378,13 @@ const LockConfirmation = (props) => {
           ServicerLoanNumber: Column12,
           blPriceExceptionApproved: Column13,
           Relock30: Column14,
-          CoprAdj: Column15,
+          // CoprAdj: Column15,
+          CorporateAdj: Column15,
         };
       });
 
       //
-      // console.log("GetInvIncome ==>", response);
+      console.log("GetInvIncome ==>", response);
     });
   };
   const handleGetLeadSourceRights = (EmpNum) => {
@@ -780,7 +781,7 @@ const LockConfirmation = (props) => {
       '" WarmHotLeadAdjval="' +
       cleanValue(WarmHotLeadAdj, 3) +
       '" CorpAdj="' +
-      CorporateAdj +
+      cleanValue(CorporateAdj, 3) +
       '" ProfileMarginNormalRng="' +
       blPriceExceptionApproved +
       '" WarmHotLeadFlag="' +
@@ -893,7 +894,7 @@ const LockConfirmation = (props) => {
         ratesheetdate,
         ratesheetused,
         WarmHotLeadAdj,
-        CorporateAdj,
+        //CorporateAdj,
       };
     });
   };
@@ -3060,9 +3061,7 @@ const LockConfirmation = (props) => {
       contextDetails["LoanId"]
     }&SessionId=${contextDetails["queryString"]["SessionId"]}&EmpNum=${
       contextDetails["EmpNum"]
-    }&LnAmt=${cleanValue(
-      LockDetails["totalloanamt"]
-    )}&rnd=${Math.random()}`;
+    }&LnAmt=${cleanValue(LockDetails["totalloanamt"])}&rnd=${Math.random()}`;
     window.open(
       url,
       "LenderCompPlan",
@@ -3163,14 +3162,18 @@ const LockConfirmation = (props) => {
     },
     {
       Name: "Rate Lock History",
-      onPress: () => {handleLockHistoryOpen()},
+      onPress: () => {
+        handleLockHistoryOpen();
+      },
       icon: "LockHistory",
       from: "Ionicons",
       size: 22,
     },
     {
       Name: "Manual Loan Program Selection",
-      onPress: () => {handleManualLoanSelection() },
+      onPress: () => {
+        handleManualLoanSelection();
+      },
       icon: "SuperviserEdit",
       from: "Ionicons",
       size: 22,
@@ -5033,7 +5036,7 @@ const LockConfirmation = (props) => {
                                   {LockDetails["ratesheetdate"]}
                                 </CustomText>
                               ) : (
-                                <View>
+                                <View testID="gridFields">
                                   <GridDropDown
                                     style={{}}
                                     showBorder={true}
@@ -5062,7 +5065,7 @@ const LockConfirmation = (props) => {
                                   {LockDetails["ratesheetused"]}
                                 </CustomText>
                               ) : (
-                                <View>
+                                <View testID="gridFields">
                                   <GridDropDown
                                     name="ratesheetused"
                                     style={{}}
@@ -5253,7 +5256,7 @@ const LockConfirmation = (props) => {
                                 Investor
                               </CustomText>
                               <View style={{ flexDirection: "row" }}>
-                                <View style={{ width: "80%" }}>
+                                <View testID="gridFields" style={{ width: "80%" }}>
                                   <GridDropDown
                                     style={{}}
                                     showBorder={true}
@@ -5357,7 +5360,7 @@ const LockConfirmation = (props) => {
                               <CustomText style={[styles["SemiMidText"]]}>
                                 Loan Servicer
                               </CustomText>
-                              <View style={{}}>
+                              <View testID="gridFields" style={{}}>
                                 <GridDropDown
                                   style={{}}
                                   showBorder={true}
@@ -5381,7 +5384,7 @@ const LockConfirmation = (props) => {
                               <CustomText style={[styles["SemiMidText"]]}>
                                 Lock Type
                               </CustomText>
-                              <View style={{}}>
+                              <View testID="gridFields" style={{}}>
                                 <GridDropDown
                                   style={{}}
                                   showBorder={true}
@@ -5632,7 +5635,7 @@ const LockConfirmation = (props) => {
                               <CustomText style={[styles["SemiMidText"]]}>
                                 Profit Margin Outside Normal Range
                               </CustomText>
-                              <View style={{}}>
+                              <View testID="gridFields" style={{}}>
                                 <GridDropDown
                                   style={{}}
                                   showBorder={true}
@@ -5666,7 +5669,7 @@ const LockConfirmation = (props) => {
                               <CustomText style={[styles["SemiMidText"]]}>
                                 Lead Source
                               </CustomText>
-                              <View style={{}}>
+                              <View testID="gridFields" style={{}}>
                                 <GridDropDown
                                   style={{}}
                                   showBorder={true}
@@ -5692,11 +5695,13 @@ const LockConfirmation = (props) => {
                               </CustomText>
                               {!LockDetails["SupervisorEdit"] ? (
                                 <CustomText style={[styles["MidText"]]}>
-                                  {LockDetails["WarmHotLeadAdj"] ||
-                                    formatPercentage(
+                                  {`(${formatPercentage(
+                                    cleanValue(
                                       LockDetails["WarmHotLeadAdj"],
-                                      4
-                                    )}
+                                      3
+                                    ),
+                                    4
+                                  ).replace("-", "")})`}
                                 </CustomText>
                               ) : (
                                 <View>
@@ -5829,10 +5834,10 @@ const LockConfirmation = (props) => {
                               </CustomText>
                               {!LockDetails["SupervisorEdit"] ? (
                                 <CustomText style={[styles["MidText"]]}>
-                                  {formatPercentage(
-                                    LockDetails["CorporateAdj"],
-                                    2
-                                  )}
+                                  {`(${formatPercentage(
+                                    cleanValue(LockDetails["CorporateAdj"], 3),
+                                    4
+                                  ).replace("-", "")})`}
                                 </CustomText>
                               ) : (
                                 <View>
@@ -5870,10 +5875,11 @@ const LockConfirmation = (props) => {
                                         LockDetails["CorporateAdj"],
                                         2
                                       );
-                                      if (val.indexOf("-") != -1) {
-                                        val = `(${val})`;
-                                        val = val.replace("-", "");
-                                      }
+
+                                      // if (val.indexOf("-") != -1) {
+                                      val = `(${val})`;
+                                      val = val.replace("-", "");
+                                      //   }
                                       handleOnchangeDetails(
                                         "CorporateAdj",
                                         val,

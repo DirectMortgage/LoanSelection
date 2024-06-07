@@ -175,6 +175,7 @@ const InputBox = (props) => {
     width = "100%",
     style = {},
     showBorder = false,
+    isAdditionalValidation=false
   } = props;
   if (type.includes("Zip")) {
     type = "numeric";
@@ -200,11 +201,11 @@ const InputBox = (props) => {
           styles.inputBox,
           {
             borderColor:
-              validate && ["", 0, null, undefined, "0","$0"].includes(value)
+            isAdditionalValidation || validate && ["", 0, null, undefined, "0","$0"].includes(value)
                 ? "red"
                 : "silver",
             borderWidth:
-              validate && ["", 0, null, undefined, "0","$0"].includes(value)
+            isAdditionalValidation ||  validate && ["", 0, null, undefined, "0","$0"].includes(value)
                 ? 2
                 : showBorder
                 ? 1

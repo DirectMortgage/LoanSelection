@@ -577,45 +577,58 @@ const fnRemoveSpecChar = (value) => {
   return value;
 };
 const fnAddDummyRow = (obj, lineIds) => {
-  let maxLength = -Infinity,
-    lineId = 0;
+  // let maxLength = -Infinity,
+  //   lineId = 0;
 
-  lineIds.forEach((e) => {
-    const length = obj[e].length;
-    if (length > maxLength) {
-      maxLength = length;
-      lineId = e;
-    }
-  });
-  let otherLineIds = lineIds.filter((e) => e != lineId);
-  obj[lineId].forEach((i) => {
-    otherLineIds.forEach((key) => {
-      const isExist = obj[key].some((j) => j.IntRate === i.IntRate);
-      if (!isExist) {
-        let DummyRow = {
-          LockPeriodDays: i.LockPeriodDays,
-          IntRate: i.IntRate,
-          LockPeriodID: i.LockPeriodID,
-          LineId: i.LineId,
-          IntRateID: i.IntRateID,
-          BasePoints: "-",
-          BaseAmt: "-",
-          MonthlyPayment: "-",
-          CalAmt: "",
-          RateSheetName: "",
-          LnProgActiveId: i.LnProgActiveId,
-          IsDummy: true,
-        };
-        obj[key].push(DummyRow);
-        obj[key].sort(
-          (a, b) =>
-            parseFloat(cleanValue(a.IntRate)) -
-            parseFloat(cleanValue(b.IntRate))
-        );
-      }
+  // lineIds.forEach((e) => {
+  //   const length = obj[e].length;
+  //   if (length > maxLength) {
+  //     maxLength = length;
+  //     lineId = e;
+  //   }
+  // });
+  try {
+    let availableRates = [];
+    lineIds.forEach((lineId) => {
+      obj[lineId].forEach((i) => {
+        const isExist = availableRates.some((Rate) => Rate === i.IntRate);
+        if (!isExist) availableRates.push(i.IntRate);
+      });
     });
-  });
-  return obj;
+    //console.log("availableRates ==>", availableRates);
+    // let otherLineIds = lineIds.filter((e) => e != lineId);
+
+    availableRates.forEach((Rate) => {
+      lineIds.forEach((key) => {
+        const isExist = obj[key].some((j) => j.IntRate === Rate);
+        if (!isExist) {
+          let DummyRow = {
+            LockPeriodDays: obj[key][0]["LockPeriodDays"],
+            IntRate: Rate,
+            LockPeriodID: obj[key][0]["LockPeriodID"],
+            LineId: obj[key][0]["LineId"],
+            IntRateID: obj[key].length || 0,
+            BasePoints: "0",
+            BaseAmt: "0",
+            MonthlyPayment: "-",
+            CalAmt: "0",
+            RateSheetName: "-",
+            LnProgActiveId: obj[key][0]["LnProgActiveId"],
+            IsDummy: true,
+          };
+          obj[key].push(DummyRow);
+          // obj[key].sort(
+          //   (a, b) =>
+          //     parseFloat(cleanValue(a.IntRate)) -
+          //     parseFloat(cleanValue(b.IntRate))
+          // );
+        }
+      });
+    });
+    return obj;
+  } catch (error) {
+    return obj
+  }
 };
 
 const formatDateTimeNew = (date) => {
@@ -665,7 +678,7 @@ const handleGetMIQuote = (obj) => {
     name: "GetMIQuote_Wrapper",
     params: obj,
   }).then((response) => {
-    console.info("GetMIQuote_Wrapper initiated");
+    console.info("GetMIQuote_Wrapper initiated ==>", obj);
     return response;
   });
 };
@@ -705,6 +718,7 @@ const handleProceedRunMIQuote = async (
     LTV: parseFloat(LTV),
     CLTV: parseFloat(CLTV),
   };
+  console.log('Input passed to run MI Quote ==>',obj)
   let Response = await handleAPI({
     name: "ProceedRunMiQuote",
     params: obj,
@@ -890,7 +904,7 @@ const handleSelectQuote = (
       name: "SelectMIQuote",
       params: obj,
     }).then((response) => {
-      console.log("Selected MI Quote successfully =>",response);
+      console.log("Selected MI Quote successfully =>", response);
     });
   } catch (error) {
     console.log("Error in Selecting MI Quote API");
@@ -899,8 +913,8 @@ const handleSelectQuote = (
 
 const fnSortBy = (array, key) => {
   return array.sort((a, b) => {
-    const valueA = parseInt(a[key]);
-    const valueB = parseInt(b[key]);
+    const valueA = parseFloat(cleanValue(a[key]));
+    const valueB = parseFloat(cleanValue(b[key]));
 
     return valueA - valueB;
   });
@@ -916,16 +930,47 @@ const handleGetUpdatedPaymentSection = (RunID, Lineid) => {
   });
 };
 
-const handleUpdateLenderComp = (EmpNum, Value, Flag)=>{
+const handleUpdateLenderComp = (EmpNum, Value, Flag) => {
   let obj = { EmpNum, Value, Flag };
   handleAPI({
     name: "UpdateLenderComp",
     params: obj,
   }).then((response) => {
-    response =JSON.parse(response)
+    response = JSON.parse(response);
     console.log("UpdateLenderComp ===>", response);
   });
+};
+const fnFindMinFICO = (data)=>{
+  let minFicoScore = Infinity;
+  
+  data.forEach(record => {
+      record.forEach(item => {
+          if (item.columnName === 'FICO Score') {
+              const ficoScore = parseInt(item['FICO Score']);
+              if (ficoScore < minFicoScore) {
+                  minFicoScore = ficoScore;
+              }
+          }
+      });
+  });
+  
+  return minFicoScore;
 }
+const fnOpenEditRightsPage =(SessionId,LoanId,FormId)=>{
+  let url =
+  "../../../BorrowerApplication/Presentation/Webforms/EditRights.aspx?SessionID=" +
+  SessionId +
+  "&LoanId=" +
+  LoanId +
+  "&FormId="+FormId;
+
+  window.open(
+    url,
+    "EditRights",
+    "width=1200,height=900,resizable=1,scrollbars=1"
+  );
+}
+
 export {
   handleAPI,
   formatCurrency,
@@ -969,5 +1014,7 @@ export {
   fnSortBy,
   handleGetWholesaleRights,
   handleGetUpdatedPaymentSection,
-  handleUpdateLenderComp
+  handleUpdateLenderComp,
+  fnFindMinFICO,
+  fnOpenEditRightsPage
 };

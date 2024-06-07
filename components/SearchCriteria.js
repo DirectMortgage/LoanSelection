@@ -38,6 +38,7 @@ import {
   handleAPI_,
   handleWholeSaleRights,
   handleProceedRunMIQuote,
+  fnFindMinFICO,
 } from "./accessories/CommonFunctions";
 import DropDownButton from "./accessories/DropDownButton";
 import { web, android, ios } from "./accessories/Platform";
@@ -111,7 +112,7 @@ const SearchCriteria = ({
     "Liabilities ($)": "$0.00",
     "First Time Home Buyer": 0,
     "Term (Months)": "360",
-   // "Term (Months)_Bitwise": "64",
+    // "Term (Months)_Bitwise": "64",
     "Lien Position": 1,
     "Lock Period Days": 4,
     "Existing Government Loan": 1,
@@ -147,7 +148,10 @@ const SearchCriteria = ({
           isMobileWeb,
         };
       });
+    //  console.log('dfgfdg')
     };
+    
+    handleUpdateSize()
     window.addEventListener("resize", handleUpdateSize);
     return () => window.removeEventListener("resize", handleUpdateSize);
   }, []);
@@ -176,7 +180,7 @@ const SearchCriteria = ({
         let {
           LienPosition,
           NoOfUnits,
-          
+
           OccupancyType,
           PropertyTypeType,
           SubjectAddress,
@@ -250,7 +254,9 @@ const SearchCriteria = ({
           CRIDs = [],
           showSSNPrompt = false;
         if (
-          (Index != -1 && (LoanInfo[Index]["BorrInfo"].length > 1 && contextDetails['OnloadProcess'] != 'PQ')) ||
+          (Index != -1 &&
+            LoanInfo[Index]["BorrInfo"].length > 1 &&
+            contextDetails["OnloadProcess"] != "PQ") ||
           LoanInfo[Index]["BorrInfo"][0]["FirstName"] != ""
         ) {
           let TotalBrrw = [],
@@ -366,7 +372,7 @@ const SearchCriteria = ({
             "Lock Period Days": LockPeriod,
             "Existing Government Loan": ExistingGovtLoan,
             "Other Options": 0,
-            "Compensation Type": searchDetails['Compensation Type']|| 0,//0, //IsLenderCompPlanExists
+            "Compensation Type": searchDetails["Compensation Type"] || 0, //0, //IsLenderCompPlanExists
             "Loan Purpose": LoanPurpose,
             "Purchase Price": formatCurrency(PurchasePrice, 0),
             "Appraised Value": formatCurrency(AppraisalPrice, 0),
@@ -393,6 +399,7 @@ const SearchCriteria = ({
             "Self Employed": IsSelfEmployed,
             Occupancy: OccupancyType,
             "FICO Score": LoanInfo[Index]["BorrInfo"][0]["FICO"],
+            'latestModifiedFICO':LoanInfo?.[Index]?.["BorrInfo"]?.[0]?.["FICO"]||0,
             "Product Type": DeBitwisedAgency,
             "Single Premium MI": handleTypeOptionsBitwise(
               "Single Premium MI",
@@ -616,6 +623,7 @@ const SearchCriteria = ({
               setSearchDetails({
                 ...searchDetails,
                 initiateMIQuote: true,
+                latestModifiedFICO:value
               });
             }
           }
@@ -916,7 +924,8 @@ const SearchCriteria = ({
       ) {
         PageFrom = "RealLoan";
         let Index = fnGetIndex(response["DataOut"], "DataOut");
-        let LineId = 0;
+        let LineId = 0,
+          IsNoProgramSelected = true;
         if (Index != -1) {
           LineId = Object.keys(
             response["DataOut"]?.[Index]?.["DataOut"]?.[1] || []
@@ -924,12 +933,22 @@ const SearchCriteria = ({
         }
         if (LineId.length) LineId = LineId?.[0].split("_")?.[1] || 0;
         else {
-          setModalOpen({
-            ...modalOpen,
-            RateSheetRunWarning: true,
-            Msg: "Exception occurred on Loading Selected Loan Product.Please Contact Administrator.",
-            component: false,
-          });
+          let progIndex = fnGetIndex(response["DataOut"], "ProgramName");
+          IsNoProgramSelected =
+            (
+              response["DataOut"][progIndex]?.["ProgramName"]?.[0][
+                "ProgramName"
+              ] || ""
+            )?.length == 0;
+
+          if (!IsNoProgramSelected) {
+            setModalOpen({
+              ...modalOpen,
+              RateSheetRunWarning: true,
+              Msg: "Exception occurred on Loading Selected Loan Product.Please Contact Administrator.",
+              component: false,
+            });
+          }
         }
         SetLoanDetail({
           ...LoanDetails,
@@ -974,6 +993,10 @@ const SearchCriteria = ({
           ErrorLoadingLP,
         };
       });
+      try {
+        window.parent.resizeIframe();
+      } catch (error) {}
+
       const endTime = performance.now();
       const loadingTime = endTime - startTime;
       if (document.getElementById("divPageLoad").innerText == 0)
@@ -1044,7 +1067,13 @@ const SearchCriteria = ({
       // console.log("TypeOption ====>", TypeOption);
     });
   };
-  const fnGetLoanOfficers = async (flag, value, Process, SelectedLOObj,from) => {
+  const fnGetLoanOfficers = async (
+    flag,
+    value,
+    Process,
+    SelectedLOObj,
+    from
+  ) => {
     let additionalObj = {};
     // if (
     //   (contextDetails["OnloadProcess"] == "PQ" ||
@@ -1083,7 +1112,7 @@ const SearchCriteria = ({
         };
       });
 
-      if (SelectedLOObj && from != 'Comp') {
+      if (SelectedLOObj && from != "Comp") {
         additionalObj["LO"] = SelectedLOObj["Id"];
         additionalObj["LOName"] = SelectedLOObj["Name"];
         handleSaveLoanOfficer(contextDetails["LoanId"], SelectedLOObj["Id"]);
@@ -1110,7 +1139,7 @@ const SearchCriteria = ({
               CompNum: compNum,
             };
           });
-          handleSaveLoanOfficer(contextDetails["LoanId"],value)
+          handleSaveLoanOfficer(contextDetails["LoanId"], value);
         }
       }
     });
@@ -1129,7 +1158,7 @@ const SearchCriteria = ({
         // const typeBitwiseArray = options.map((type) =>
         //   val.includes(type.TypeOption) ? type.TypeBitwise : 0
         // );
-        val = val.toString()
+        val = val.toString();
         const typeBitwiseArray = options.map((type) =>
           val.split(",").indexOf(type.TypeOption) != -1 ? type.TypeBitwise : 0
         );
@@ -1510,7 +1539,10 @@ const SearchCriteria = ({
     console.log(
       "============================ Search initiated =================="
     );
-
+    let whichLoanAmount = "Loan Amount 1st";
+    if (searchDetails["Lien Position"] == 2) {
+      whichLoanAmount = "Loan Amount 2nd";
+    }
     if (
       GlobleValue["LO"] != "0" &&
       //    searchDetails["FICO Score"] &&
@@ -1523,8 +1555,8 @@ const SearchCriteria = ({
       ((searchDetails["Purchase Price"] != 0 &&
         searchDetails["Purchase Price"] != "$0") ||
         searchDetails["Loan Purpose"] != 1) &&
-      searchDetails["Loan Amount 1st"] &&
-      searchDetails["Loan Amount 1st"] != "$0" &&
+      searchDetails[whichLoanAmount] &&
+      searchDetails[whichLoanAmount] != "$0" &&
       searchDetails["Lien Position"] != 0 &&
       searchDetails["Lender Fees In Rate"] != 0
     ) {
@@ -1548,11 +1580,15 @@ const SearchCriteria = ({
 
     // for MI Quote
     try {
-      if (parseFloat(cleanValue(searchDetails["LTV"])) > 80) {
+      let miType = searchDetails["MI Type"].split(",");
+      if (
+        parseFloat(cleanValue(searchDetails["LTV"])) > 80 &&
+        !(miType.length == 1 && miType.includes("7"))
+      ) {
         //let res = await handleOpenPopUp_MIQuote(contextDetails["LoanId"], 0); //CMS_SP_isMIQuote_Exists
         let res = await handleProceedRunMIQuote(
           contextDetails["LoanId"],
-          searchDetails["FICO Score"]||'',
+          searchDetails["latestModifiedFICO"] || "",
           cleanValue(searchDetails["Loan Amount 1st"]),
           cleanValue(searchDetails["Loan Amount 2nd"]),
           searchDetails["LTV"],
@@ -1569,9 +1605,17 @@ const SearchCriteria = ({
           }
         }
         if ((res?.[0] || 0) == 1 && (!exists || productType.includes("5"))) {
+          let PlanType = miType.includes("6")
+            ? 3
+            : miType.includes("1") && miType.length == 1
+            ? 1
+            : 2;
           let obj_ = {
             LoanID: contextDetails["LoanId"],
             SessionID: contextDetails["queryString"]["SessionId"],
+            PlanType: PlanType,
+            VendorIds: "",
+            fromRatelock: 1,
           };
           handleGetMIQuote(obj_);
           // let component = (
@@ -1797,7 +1841,7 @@ const SearchCriteria = ({
             return {
               ...prevContext,
               IsLoanProductGridActive: true,
-              wholeSaleRights:wholeSaleRights||0
+              wholeSaleRights: wholeSaleRights || 0,
             };
           });
           setSearchDetails({
@@ -1887,15 +1931,23 @@ const SearchCriteria = ({
         CLTV = ((LoanAmount1 + iLoanAmount2) / Value) * 100;
         // let LTV_ = LTV.toFixed(2);
         // let CLTV_ = CLTV.toFixed(2);
-        let deciLTV = parseFloat(LTV.toFixed(4).split(".")[1]);
-        let deciCLTV = parseFloat(CLTV.toFixed(4).split(".")[1]);
-        let deciLTV_ = parseFloat(LTV.toFixed(2).split(".")[1]);
-        let deciCLTV_ = parseFloat(CLTV.toFixed(2).split(".")[1]);
-        if (deciLTV_ == 0) {
-          if (deciLTV > 0) LTV = LTV.toFixed(2).split(".")[0] + ".01";
-        }
-        if (deciCLTV_ == 0) {
-          if (deciCLTV > 0) CLTV = CLTV.toFixed(2).split(".")[0] + ".01";
+        let deciLTV = LTV.toString().split(".");
+        let deciCLTV = CLTV.toString().split(".");
+
+        let deciLTV_ = LTV.toFixed(2).split(".");
+        let deciCLTV_ = CLTV.toFixed(2).split(".");
+        try {
+          if (deciLTV_[1] == 0) {
+            if (deciLTV[1] > 0 && deciLTV[0] == deciLTV[0])
+              LTV = LTV.toFixed(2).split(".")[0] + ".01";
+          }
+          if (deciCLTV_[1] == 0) {
+            //  deciCLTV = '0.' + deciCLTV
+            if (deciCLTV[1] > 0 && deciCLTV[0] == deciCLTV_[0])
+              CLTV = CLTV.toFixed(2).split(".")[0] + ".01";
+          }
+        } catch (error) {
+          console.error("LTV/CTLV calculatio ==>", error);
         }
       } else {
         if (
@@ -1951,7 +2003,7 @@ const SearchCriteria = ({
         // else fnGetBrokerSearchListByCompName(value);
         else fnGetBrokerSearchListByEmpName(contextDetails["EmpType"], value);
       } else if (type == "Select") {
-        fnSaveBroker(value,from);
+        fnSaveBroker(value, from);
         setLoanProducts([]);
         handleLoanProducts([]);
       }
@@ -2020,7 +2072,7 @@ const SearchCriteria = ({
     });
   };
 
-  const fnSaveBroker = (Row,from) => {
+  const fnSaveBroker = (Row, from) => {
     let { UserName, UserNum, SelectedLOObj } = Row;
     if (!UserName) {
       UserName = Row.CompanyName;
@@ -2040,11 +2092,17 @@ const SearchCriteria = ({
       ? contextDetails["NewLoanId"]
       : contextDetails["LoanId"];
 
-    handleSaveBroker(UserNum, LoanId, "ChangeCompany", SelectedLOObj,from);
+    handleSaveBroker(UserNum, LoanId, "ChangeCompany", SelectedLOObj, from);
     // fnGetLoanOfficers(0, UserNum); //With Company Number
     handleCompanySelection_FessinRate(UserNum);
   };
-  const handleSaveBroker = async (brokerid, LoanId, Process, SelectedLOObj,from) => {
+  const handleSaveBroker = async (
+    brokerid,
+    LoanId,
+    Process,
+    SelectedLOObj,
+    from
+  ) => {
     if (brokerid != 1000) {
       let LenderCompExistCheck = await handleGetLendercompplanCheck(brokerid);
       setContextDetails((prevContext) => {
@@ -2063,7 +2121,7 @@ const SearchCriteria = ({
       params: obj,
     }).then((response) => {
       //console.log("Broker Saved successfully!!!!");
-      fnGetLoanOfficers(0, brokerid, Process, SelectedLOObj,from);
+      fnGetLoanOfficers(0, brokerid, Process, SelectedLOObj, from);
     });
   };
   const handleCompanySelection_FessinRate = (CompNum) => {
@@ -2151,7 +2209,6 @@ const SearchCriteria = ({
       params: obj,
     }).then((response) => {
       //console.log("getLOFeesinRate ===>", response);
-      
     });
   };
   const handleRealLoan = async (LoanInfo, LineId) => {
@@ -2189,7 +2246,7 @@ const SearchCriteria = ({
         return {
           ...prevContext,
           SearchedInfo: InputData,
-          IsLoanProductGridActive: true
+          IsLoanProductGridActive: true,
         };
       });
     }
@@ -2742,7 +2799,6 @@ const SearchCriteria = ({
           },
         ];
       }
-      // return
       let InputData = {
         DataIn: [
           {
@@ -2839,7 +2895,8 @@ const SearchCriteria = ({
                 RequestEscrow: searchDetails["RequestEscrowWaiver"] || "0", //other option
                 EnergyEffMort: searchDetails["EnergyEfficient"] || "0", //other option
                 PropertylistedonMLS: searchDetails["PropertylistedMLS"] || "0", //other option
-                QualifyingFICO: searchDetails["FICO Score"], // min FICO from Borr
+                QualifyingFICO:
+                  fnFindMinFICO(borrowerInfo) || searchDetails["FICO Score"], // min FICO from Borr
                 LoanProgNum: searchDetails["Loan Program"] || "",
                 NonProfitGiftFund: searchDetails["DownPaymentGift"] || "0", //other option
                 LenderBorrowerPaid: "1", //Hard coded
@@ -2908,8 +2965,8 @@ const SearchCriteria = ({
         if (contextDetails["TBD"] != 1) handleTBD(1);
       }
 
-      if(searchDetails['Compensation Type'] == 1){
-        handleUpdateLenderComp(contextDetails['EmpNum'],1,1)
+      if (searchDetails["Compensation Type"] == 1) {
+        handleUpdateLenderComp(contextDetails["EmpNum"], 1, 1);
       }
 
       return InputData;
@@ -2980,14 +3037,14 @@ const SearchCriteria = ({
       "status=0,toolbar=0,menubar=0,resizable=yes,scrollbars=yes,width=1000px,height=650px,"
     );
   };
-  const handleUpdateLenderComp = (EmpNum, Value, Flag)=>{
+  const handleUpdateLenderComp = (EmpNum, Value, Flag) => {
     let obj = { EmpNum, Value, Flag };
     handleAPI({
       name: "UpdateLenderComp",
       params: obj,
     }).then((response) => {
-      response =JSON.parse(response)
-      let UpdateLenderComp = response['Table'][0]['Column1']
+      response = JSON.parse(response);
+      let UpdateLenderComp = response["Table"][0]["Column1"];
       setContextDetails((prevContext) => {
         return {
           ...prevContext,
@@ -2996,7 +3053,7 @@ const SearchCriteria = ({
       });
       console.log("UpdateLenderComp ===>", response);
     });
-  }
+  };
   //=================================== Function declarations Ends=======================================
   let options = [
     { label: "Option 1", value: "1" },
@@ -3647,15 +3704,16 @@ const SearchCriteria = ({
               <View
                 style={{
                   flexDirection:
-                    isMobileWeb && isMenuOpen["EditLO"] ? "column" : "row",
+                    isMobileWeb && isMenuOpen["EditLO"] ? "column" : isMobileWeb ? 'column':"row",
                   gap: 20,
                   alignItems: "baseline",
                   maxWidth: "100%",
                 }}
               >
                 <CustomText
+                testID="txtProductSearch"
                   style={{
-                    fontSize: 16,
+                    fontSize: isMobileWeb ? 14:16,
                     marginHorizontal: 9,
                     marginVertical: 0,
                     maxWidth: isMobileWeb ? "100%" : "50%",
@@ -3771,9 +3829,9 @@ const SearchCriteria = ({
                         maxWidth: "100%",
                       }}
                     >
-                      <View style={{ flexDirection: "column" }}>
-                        <CustomText>{GlobleValue["LOName"] || ""}</CustomText>
-                        <CustomText>
+                      <View  style={{ flexDirection: "column" }}>
+                        <CustomText testID="txtLOName" style={{fontSize:isMobileWeb ? 14:16}}>{GlobleValue["LOName"] || ""}</CustomText>
+                        <CustomText testID="txtCompName" style={{fontSize:isMobileWeb ? 14:16}}>
                           {GlobleValue["CompName"]?.replace("~amp~", "&") || ""}
                         </CustomText>
                       </View>
@@ -3816,7 +3874,9 @@ const SearchCriteria = ({
                   )}
                 </View>
               </View>
-              <View style={{ alignSelf: "center" }}>
+              {!contextDetails['isMobileWeb'] &&
+
+              <View testID="btnUseLastRun" style={{ alignSelf: "center" }}>
                 <Button
                   title={
                     <CustomText
@@ -3843,6 +3903,7 @@ const SearchCriteria = ({
                   }}
                 />
               </View>
+          }
             </View>
           }
           isExpand={true}

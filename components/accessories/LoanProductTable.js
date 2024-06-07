@@ -93,12 +93,14 @@ const LoanProductTable = (props) => {
   };
   const handleViewPITI = (type, obj) => {
     let { LPA_CommonData, LineId } = obj;
-
     if (obj != "") {
-      let Row = PaymentDetails.filter((e) => e["LineId"] == LineId);
       let Product = LoanProducts.filter(
         (e) => e["LineId"] == LineId && e["Id"] != -1
       );
+      Payment = Product[0]["PaymentWithoutAddons"];
+
+      if(ActiveRate?.[LPA_CommonData]||false) LineId = ActiveRate[LPA_CommonData]['LineId']
+      let Row = PaymentDetails.filter((e) => e["LineId"] == LineId);
       let {
         PropFin,
         PropHOA,
@@ -110,12 +112,11 @@ const LoanProductTable = (props) => {
         PropRETaxes,
         Payment,
       } = Row[0];
-      Payment = Product[0]["PaymentWithoutAddons"];
       if (
         Object.keys(ActiveRate).length > 1 &&
         ActiveRate[LPA_CommonData] != undefined
       ) {
-        let { LineId, IntRate } = ActiveRate[LPA_CommonData];
+        let { IntRate } = ActiveRate[LPA_CommonData];
         let { RateBandsRows } = RawRateBand[LPA_CommonData];
         let RateBand = RateBandsRows[LineId]?.filter(
           (e) => e["IntRate"] == IntRate
@@ -2223,7 +2224,7 @@ const LoanProductTable = (props) => {
                         },
                       ]}
                     >
-                      {!contextDetails["NoRateBandAvail"] && (
+                      {!contextDetails["NoRateBandAvail"] && !ActiveRate[ActiveRate?.[row?.['LPA_CommonData']]?.['LineId']]?.['IsDummy']||'' ? (
                         <Button
                           title={
                             <CustomText
@@ -2250,7 +2251,7 @@ const LoanProductTable = (props) => {
                             );
                           }}
                         />
-                      )}
+                      ):(null)}
                     </CustomText>
                   </View>
                 ) : VisibleRateBand[row["LineId"]] ? (

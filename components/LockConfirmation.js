@@ -608,18 +608,6 @@ const LockConfirmation = (props) => {
         [name]: value,
       };
     });
-    // if (
-    //   [
-    //     "escrowrequest",
-    //     "nonprofitgiftfund",
-    //     "propertylistedonmls",
-    //     "energyeffmort",
-    //   ].includes(name)
-    // ) {
-    //   setTimeout(() => {
-    //     handleSaveBorSwatch();
-    //   }, 1000);
-    // }
   };
   const handleOnBlur = (name, value) => {
     if (
@@ -1219,6 +1207,7 @@ const LockConfirmation = (props) => {
   // ********************************* Transfer Lock Ends here ******************************
 
   const handlePageSave = async () => {
+    if(LockDetails['ValidCommitmentId'] == false && LockDetails["CommitmentId"].length >0) return
     let borSwatchWait = await handleSaveBorSwatch();
     if (LockDetails["SupervisorEdit"]) {
       let supervisorSaveWait = await handleSupervisorSave();
@@ -3067,6 +3056,30 @@ const LockConfirmation = (props) => {
       "LenderCompPlan",
       "status=0,toolbar=0,menubar=0,resizable=yes,scrollbars=yes,width=1000px,height=650px,"
     );
+  };
+  const handleValidateCommitmentNumber = (Value) => {
+    let obj = { Value: Value || 0 };
+    handleAPI({
+      name: "ValidateCommitment",
+      params: obj,
+    }).then((response) => {
+      response = JSON.parse(response);
+      let res = response["Table"][0]["Column1"];
+      setLockDetails((prevDetails) => {
+        return {
+          ...prevDetails,
+          ValidCommitmentId: res,
+          saveInvestor: Value.length == 0 || res,
+        };
+      });
+      let btnSave = parent.document.getElementById("btnSave");
+      if (btnSave && (Value.length == 0 || res)) {
+        btnSave.classList.add("btn", "btn-primary");
+        btnSave.classList.remove("btnDisable");
+        btnSave.removeAttribute("disabled");
+      }
+      //console.log("ValidateCommitment ===>", response);
+    });
   };
   //======================================= Function declaration Ends ===============================================
   let menuOption = [
@@ -5256,7 +5269,10 @@ const LockConfirmation = (props) => {
                                 Investor
                               </CustomText>
                               <View style={{ flexDirection: "row" }}>
-                                <View testID="gridFields" style={{ width: "80%" }}>
+                                <View
+                                  testID="gridFields"
+                                  style={{ width: "80%" }}
+                                >
                                   <GridDropDown
                                     style={{}}
                                     showBorder={true}
@@ -5441,7 +5457,14 @@ const LockConfirmation = (props) => {
 
                               <View>
                                 <InputBox
-                                  validate={false}
+                                  validate={
+                                    LockDetails["CommitmentId"].length &&
+                                    LockDetails["ValidCommitmentId"] == false
+                                  }
+                                  isAdditionalValidation={
+                                    LockDetails["CommitmentId"].length &&
+                                    LockDetails["ValidCommitmentId"] == false
+                                  }
                                   disabled={LockDetails["wssettled"] == 1}
                                   showBorder={true}
                                   value={LockDetails["CommitmentId"] || ""}
@@ -5449,9 +5472,15 @@ const LockConfirmation = (props) => {
                                     handleOnchangeDetails(
                                       "CommitmentId",
                                       text,
-                                      "investorInfo"
+                                      "No-investorInfo"
                                     );
+                                    //text = text.target.value || "";
+                                    handleValidateCommitmentNumber(text);
                                   }}
+                                  // onBlur={(text) => {
+                                  //   text = text.target.value || "";
+                                  //   handleValidateCommitmentNumber(text)
+                                  // }}
                                 />
                               </View>
                             </View>

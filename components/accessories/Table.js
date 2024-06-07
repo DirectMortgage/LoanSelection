@@ -61,9 +61,19 @@ const TableNew = (props) => {
     "Purchase Price",
     "Appraised Value",
     "Loan Amount 1st",
+    "Loan Amount 2nd",
     "Lien Position",
     "Lender Fees In Rate",
   ];
+  try {
+    if ([0, 1].includes(Number(searchDetails["Lien Position"]))) {
+      MandatoryFields = MandatoryFields.filter((e) => e != "Loan Amount 2nd");
+    } else if (searchDetails["Lien Position"] == 2) {
+      MandatoryFields = MandatoryFields.filter((e) => e != "Loan Amount 1st");
+    }
+  } catch (error) {
+    console.error('Error in Lien Position == >',searchDetails?.["Lien Position"]||'No value')
+  }
 
   return (
     <>

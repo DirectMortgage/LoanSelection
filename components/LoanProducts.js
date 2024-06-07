@@ -674,7 +674,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
       if (RatBand.length == 1 && RatBand[0]["Col1"] == "1000.000") {
         NoRateBandAvail = true;
       }
-      if (ActiveProduct?.[5]?.["RateData"]) {
+      if (ActiveProduct?.[5]?.["RateData"] && Row[0]) {
         let {
           PropFin,
           PropHOA,
@@ -1589,6 +1589,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
       }
     }
     //console.log("fnAddDummyRow =>", fnAddDummyRow(CombineArr_Common, LineIds_));
+    CombineArr_Common = fnAddDummyRow(CombineArr_Common, LineIds_)
     return {
       RateBandsRows: CombineArr_Common,
       Addons: Adjustmentarr_Common,

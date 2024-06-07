@@ -81,12 +81,12 @@ const LoanSelection = (props) => {
   return (
     <View style={{ width: "100%", alignItems: "center", flex: 1 }}>
       {/* <Header name={headerInfo["name"]} icon={headerInfo["icon"]} /> */}
-      {(contextDetails["IsLocked"] == 1 || Status["LoanLocked"]) &&
+      {(contextDetails["IsLocked"] == 1 || Status["LoanLocked"] ) &&
       !Status["ChangeRate"] &&
       !Status["FloatDown"] &&
       !Status["ChangeLoanProgram"] &&
       (contextDetails["isLoadedInsideiFrame"] ||
-        contextDetails["standalone"] == 1 ||
+        contextDetails["standalone"] == 1 || 
         __DEV__) ? (
         <View style={{ width: "100%" }}>
           <LockConfirmation handleLock={handleLock} />
@@ -94,7 +94,7 @@ const LoanSelection = (props) => {
       ) : contextDetails["IsLocked"] == 0 ||
         Status["ChangeRate"] ||
         Status["FloatDown"] ||
-        Status["ChangeLoanProgram"] ? (
+        Status["ChangeLoanProgram"] || (contextDetails['isPublicRunScenario'] && contextDetails["IsLocked"] != 1) ? (
         <>
           <SearchCriteria
             handleLoanProducts={setLoanProducts}

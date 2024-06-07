@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
 import CustomText from "./CustomText";
 import MaterialCommunity from "react-native-vector-icons/MaterialCommunityIcons";
@@ -8,8 +8,10 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { Image } from "react-native-web";
 import { Button } from "./CommomComponents";
 import { Fragment } from "react";
+import { fnOpenEditRightsPage,context } from "./CommonFunctions";
 
 const DropDownButton = (props) => {
+const { contextDetails, setContextDetails } = useContext(context); //Get value from context
   const { listOption, MenuPosition, children, Open, handleOpen } = props;
 
   return (
@@ -129,8 +131,7 @@ const DropDownButton = (props) => {
                   },
                 ]}
                 onPress={() => {
-                  //   handleMenu();
-                  //   handleMenuOpen();
+                  fnOpenEditRightsPage(contextDetails['queryString']['SessionId'],contextDetails['LoanId'],contextDetails['OnloadProcess'] =='PQ'?'32':'18,12')
                 }}
               />
             </View>

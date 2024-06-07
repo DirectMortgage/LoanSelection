@@ -399,7 +399,7 @@ const RateBandTable = (props) => {
               <View
                 style={[styles["SpaceAround"], { flexDirection: "column" }]}
               >
-                {fnSortBy(RateBandsRows[e],'IntRateID')?.map((column, index) => {
+                {fnSortBy(RateBandsRows[e],'IntRate')?.map((column, index) => {
                   return (
                     <View
                       key={index}
@@ -408,6 +408,8 @@ const RateBandTable = (props) => {
                         borderBottomWidth: 1,
                         borderColor: "#D1D1D1",
                         backgroundColor:
+                        ActiveRate?.[CommonId]?.["IntRate"] ===
+                            column["IntRate"] && column['IsDummy'] ? '#ffdede':
                           ActiveRate[CommonId] &&
                           ActiveRate?.[CommonId]?.["IntRate"] ===
                             column["IntRate"] &&
@@ -448,11 +450,11 @@ const RateBandTable = (props) => {
                       <View style={{ flex: 1, flexDirection: "row" }}>
                         <View style={{ flexDirection: "row" }}>
                           <CustomText style={[styles["txt_Label"]]}>
-                            {column["BasePoints"] || ""}
+                            {column['IsDummy'] ? '-' :column["BasePoints"] || ""}
                           </CustomText>
                           {ActiveRate?.[CommonId]?.["IntRate"] ==
                             column["IntRate"] &&
-                            (contextDetails["wholeSaleRights"] != 0) && (
+                            (contextDetails["wholeSaleRights"] != 0 && !column["IsDummy"]) && (
                               <Icon
                                 name="information-circle"
                                 size={16}
@@ -475,7 +477,7 @@ const RateBandTable = (props) => {
                       <CustomText style={styles["txt_Label"]}>
                         {column["BaseAmt"].indexOf("-") != -1
                           ? `(${column["BaseAmt"].replace("-", "")})`
-                          : column["BaseAmt"] || ""}
+                          : column['IsDummy'] ? '-' :column["BaseAmt"] || "-"}
                       </CustomText>
                       <View
                         style={{
@@ -486,14 +488,14 @@ const RateBandTable = (props) => {
                       >
                         <View style={{ flexDirection: "row" }}>
                           <CustomText style={[styles["txt_Label"]]}>
-                            {column["Rank"] || "Ranking..."}
+                            {column['IsDummy'] ? '-' : column["Rank"] || "Ranking..."}
                           </CustomText>
 
                           <Icon
                             style={{
                               visibility:
                                 ActiveRate?.[CommonId]?.["IntRate"] ==
-                                column["IntRate"]
+                                column["IntRate"] && !column["IsDummy"]
                                   ? "visible"
                                   : "hidden",
                             }}
@@ -1195,7 +1197,7 @@ const RateBandTable = (props) => {
                     new Date(RootObjects[e]["LockExpDate"])
                   )}`}
                 </CustomText>
-                {RateBandsRows[e].length != 0 && (
+                {RateBandsRows[e].length != 0 && !ActiveRate?.[e]?.['IsDummy']||0? (
                   <Button
                     title={
                       <CustomText
@@ -1218,7 +1220,7 @@ const RateBandTable = (props) => {
                       handleLockRate(CommonId, "Modal", "Confirm", e); //ActiveRate?.[CommonId]?.['LineId'] || LineId
                     }}
                   />
-                )}
+                ):(null)}
               </View>
             </View>
           </View>

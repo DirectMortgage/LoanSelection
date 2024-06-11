@@ -44,7 +44,7 @@ const RateBandTable = (props) => {
     LenderFees,
     LenderComp,
   } = RawRateBand;
-  //console.log("Rate Band Component ====>>", props);
+  console.log("Rate Band Component ====>>", props);
   const { contextDetails, setContextDetails } = useContext(context); //Get value from context
 
   const [Total, setTotal] = useState({});
@@ -467,6 +467,8 @@ const RateBandTable = (props) => {
                                     Index: index,
                                     LockPeriodID:
                                     ActiveRate?.[LineId]?.["LockPeriodID"],
+                                    Total:Total[e]||{},
+                                    LenderComp:LenderComp[e]||{}
                                   };
                                   AdjustmentDetails(true, column_);
                                 }}

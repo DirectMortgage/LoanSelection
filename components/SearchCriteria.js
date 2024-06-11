@@ -1340,7 +1340,7 @@ const SearchCriteria = ({
         type: "multiSelect",
       },
       {
-        columnName: "MI Type",
+        columnName: "Mortgage Insurance Type",
         columnValue: " ",
         Option: TypeOption["MIType"],
         type: "multiSelect",

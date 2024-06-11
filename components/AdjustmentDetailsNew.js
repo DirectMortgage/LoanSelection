@@ -7,20 +7,30 @@ import {
   InputBoxOrdinary,
 } from "./accessories/CommomComponents";
 import CustomText from "./accessories/CustomText";
-import { cleanValue, formatCurrency } from "./accessories/CommonFunctions";
+import {
+  cleanValue,
+  formatCurrency,
+  formatPercentage,
+} from "./accessories/CommonFunctions";
+import { Image } from "react-native-web";
 const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
-  //const [Open,setOpen] = useState({});
+  const [Tab, setTab] = useState({ Adjustment: true });
 
   const { Result } = Open;
   let { Rate, LockDay, RateSheetName, WorstRateSheetName } =
     Result[0]["RootObjects"][0];
-
+  console.log("Adjustment ==> ", Result);
+  let { Addons, LenderComp, Total, selectedRate } =
+    Result?.[2]?.["ProfitMargin"] || {};
+  const fnToggle = (name) => {
+    setTab({ [name]: true });
+  };
   return (
     <View style={styles.container}>
       <Modal transparent={true} visible={true}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <View style={styles.header}>
+            {/* <View style={styles.header}>
               <CustomText style={{ color: "#fff", fontSize: 16 }}>
                 Adjustments Details
               </CustomText>
@@ -32,7 +42,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                   handleAdjustmentDetails(false, "");
                 }}
               />
-            </View>
+            </View> */}
 
             <View style={styles.container}>
               {/* <View style={{ flexDirection: "row" }}>
@@ -44,87 +54,233 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                   {RateSheetName}
                 </CustomText>
               </View> */}
-              <View style={{ flexDirection: "row", marginTop: 5 }}>
-                <View style={{ flexDirection: "row" }}>
-                  <CustomText
-                    bold={true}
-                    style={{ fontSize: 12, color: "#333333" }}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  marginLeft: 125,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    margin: 10,
+                    gap: 40,
+                    justifyContent: "center",
+                  }}
+                >
+                  <TouchableOpacity
+                    autoFocus={"No"}
+                    onPress={() => {
+                      fnToggle("Profit");
+                    }}
                   >
-                    {"Interest Rate: "}
-                  </CustomText>
-                  <CustomText style={{ fontSize: 12, color: "#333333" }}>
-                    {Rate}
-                  </CustomText>
-                </View>
-                <View style={{ flexDirection: "row", marginLeft: 20 }}>
-                  <CustomText
-                    bold={true}
-                    style={{ fontSize: 12, color: "#333333" }}
-                  >
-                    {"Lock Period: "}
-                  </CustomText>
-                  <CustomText style={{ fontSize: 12, color: "#333333" }}>
-                    {LockDay}
-                  </CustomText>
-                </View>
-              </View>
-              <View>
-                {WorstRateSheetName != undefined ? (
-                  <View style={styles["Table"]}>
                     <View
                       style={{
                         flexDirection: "row",
-                        flex: 4,
-                        backgroundColor: "#508BC9",
-                        // paddingVertical: 3,
+                        borderBottomWidth: Tab["Profit"] ? 2 : 0,
+                        borderBottomColor: "#424242",
+                        paddingHorizontal: 8,
+                        paddingBottom: 4,
+                        cursor: "pointer",
                       }}
                     >
                       <CustomText
-                        style={{
-                          flex: 3,
-                          flexDirection: "row",
-                          textAlign: "left",
-                          fontSize: 14,
-                          borderRightWidth: 2,
-                          borderColor: "#32CD32",
-                          color: "#fff",
-                          paddingVertical: 10,
-                          paddingLeft: 15,
-                        }}
+                        bold={true}
+                        style={{ fontSize: 12, color: "#333333" }}
                       >
-                        Description
-                      </CustomText>
-                      <CustomText
-                        style={{
-                          flex: 1,
-                          flexDirection: "row",
-                          textAlign: "center",
-                          fontSize: 14,
-                          borderRightWidth: 2,
-                          borderTopWidth: 2,
-                          borderColor: "#32CD32",
-                          color: "#fff",
-                          paddingLeft: 11,
-                          paddingVertical: 10,
-                        }}
-                      >
-                        {RateSheetName}
-                      </CustomText>
-                      <CustomText
-                        style={{
-                          flex: 1,
-                          flexDirection: "row",
-                          textAlign: "center",
-                          fontSize: 14,
-                          color: "#fff",
-                          marginLeft: 10,
-                          paddingVertical: 10,
-                        }}
-                      >
-                        {WorstRateSheetName}
+                        {"Profit Margins"}
                       </CustomText>
                     </View>
-                    {Result[1]["BasePriceInfo"].map((e, i) => (
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    tabIndex={-1}
+                    onPress={() => {
+                      fnToggle("Adjustment");
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        borderBottomWidth: Tab["Adjustment"] ? 2 : 0,
+                        borderBottomColor: "#424242",
+                        paddingHorizontal: 8,
+                        paddingBottom: 4,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <CustomText
+                        bold={true}
+                        style={{ fontSize: 12, color: "#333333" }}
+                      >
+                        {"Adjustment Details"}
+                      </CustomText>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                <Image
+                  style={{
+                    height: 13,
+                    width: 13,
+                    top: 13,
+                  }}
+                  resizeMode="contain"
+                  source={require(`../assets/close.svg`)}
+                  onClick={() => {
+                    handleAdjustmentDetails(false, "");
+                  }}
+                />
+              </View>
+              {Tab["Adjustment"] ? (
+                <View>
+                  <View style={[styles["Table"], { borderBottomWidth: 2,borderBottomColor:'#999999' }]}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        flex: 5,
+                        backgroundColor: "#508BC9",
+                      }}
+                    >
+                      <CustomText
+                        style={[
+                          styles["headerLabel"],
+                          {
+                            flex: 2,
+                          },
+                        ]}
+                      >
+                        Adjustments
+                      </CustomText>
+
+                      <CustomText
+                        style={[
+                          styles["headerLabel"],
+                          {
+                            flex: 1,
+                            paddingHorizontal: 0,
+                          },
+                        ]}
+                      >
+                        {"Rate"}
+                      </CustomText>
+                      <CustomText
+                        style={[
+                          styles["headerLabel"],
+                          {
+                            flex: 1,
+                            paddingHorizontal: 0,
+                          },
+                        ]}
+                      >
+                        {"Points"}
+                      </CustomText>
+                      <CustomText
+                        style={[
+                          styles["headerLabel"],
+                          {
+                            flex: 1,
+                            paddingHorizontal: 0,
+                          },
+                        ]}
+                      >
+                        {"Cost"}
+                      </CustomText>
+                    </View>
+                    <View
+                      style={{
+                        gap: 3,
+                      }}
+                    >
+                      <View
+                        style={{
+                          flex: 5,
+                          flexDirection: "row",
+                          borderTopWidth: 1,
+                          borderTopColor: "#dddddd",
+                          backgroundColor: "#fff",
+                          backgroundColor: "#F2F2F2",
+                        }}
+                      >
+                        <View
+                          style={{
+                            flex: 2,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: "#000",
+                            }}
+                          >
+                            {"Base Rate & Price"}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            // borderRightWidth: 1,
+                            // borderColor: "#dddddd",
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: "#000000",
+                            }}
+                          >
+                            {selectedRate["IntRate"]}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: selectedRate["BasePoints"]
+                                .toString()
+                                .includes("(")
+                                ? "green"
+                                : "red",
+                            }}
+                          >
+                            {selectedRate["BasePoints"]}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: selectedRate["BaseAmt"]
+                                .toString()
+                                .includes("-")
+                                ? "green"
+                                : "red",
+                            }}
+                          >
+                            {selectedRate["BaseAmt"].includes("-")
+                              ? formatCurrency(selectedRate["BaseAmt"], 1)
+                              : selectedRate["BaseAmt"]}
+                          </CustomText>
+                        </View>
+                      </View>
+                    </View>
+                    {Addons?.map((e, i) => (
                       <View
                         style={{
                           gap: 3,
@@ -135,17 +291,35 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                             flex: 4,
                             flexDirection: "row",
                             borderTopWidth: 1,
-                            borderTopColor: "#dddddd",
-                            backgroundColor:
-                              e["ItemDesc"].indexOf("Final Base") != -1 ||
-                              e["ItemDesc"].indexOf("Final Price") != -1
-                                ? "#DEEAF1"
-                                : "inherit",
+                            borderTopColor: "#999999",
+                            backgroundColor: "#fff",
                           }}
                         >
                           <View
                             style={{
-                              flex: 3,
+                              flex: 2,
+                              // borderRightWidth: 1,
+                              // borderColor: "#dddddd",
+                              paddingLeft: 15,
+                            }}
+                          >
+                            <CustomText
+                              style={{
+                                fontSize: 12,
+                                paddingVertical: 6,
+                                color: "#428BCA",
+                                textDecoration: "underline",
+                                cursor:'pointer'
+                              }}
+                            >
+                              {e["Descript"]
+                                .replace("[rab]", "")
+                                .replace("[rae]", "")}
+                            </CustomText>
+                          </View>
+                          <View
+                            style={{
+                              flex: 1,
                               // borderRightWidth: 1,
                               // borderColor: "#dddddd",
                               paddingLeft: 15,
@@ -157,170 +331,584 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                                 paddingVertical: 6,
                                 color: "#000000",
                               }}
-                              bold={
-                                e["ItemDesc"].indexOf("Final Base") != -1 ||
-                                e["ItemDesc"].indexOf("Final Price") != -1
-                              }
                             >
-                              {e["ItemDesc"]}
+                              {e["Rate"]}
                             </CustomText>
                           </View>
                           <View
                             style={{
                               flex: 1,
-                              borderRightWidth: 2,
-                              borderLeftWidth: 2,
-                              borderColor: "#32CD32",
-                              paddingRight: 10,
-                              borderBottomWidth:
-                                e["ItemDesc"].indexOf("Final Price") != -1
-                                  ? 2
-                                  : 0,
-                            }}
-                          >
-                            <CustomText
-                              style={{
-                                flex: 1,
-                                fontSize: 12,
-                                color: "#000000",
-                                textAlign: "center",
-                                marginTop: 6,
-                              }}
-                              bold={
-                                e["ItemDesc"].indexOf("Final Base") != -1 ||
-                                e["ItemDesc"].indexOf("Final Price") != -1
-                              }
-                            >
-                              {e["PointsValueOne"]}
-                            </CustomText>
-                          </View>
-                          <View
-                            style={{
-                              flex: 1,
-                              paddingLeft: 10,
-                              backgroundColor:
-                                e["PointsValueOne"] != e["PointsValueTwo"] &&
-                                !(
-                                  e["ItemDesc"].indexOf("Final Base") != -1 ||
-                                  e["ItemDesc"].indexOf("Final Price") != -1
-                                )
-                                  ? "yellow"
-                                  : "inherit",
-                            }}
-                          >
-                            <CustomText
-                              style={{
-                                fontSize: 11,
-                                paddingRight: 10,
-                                color: "#333333",
-                                textAlign: "right",
-                                marginTop: 4,
-                              }}
-                              bold={
-                                e["ItemDesc"].indexOf("Final Base") != -1 ||
-                                e["ItemDesc"].indexOf("Final Price") != -1
-                              }
-                            >
-                              {e["PointsValueTwo"]}
-                            </CustomText>
-                          </View>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <View style={styles["Table"]}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        flex: 6,
-                        backgroundColor: "#508BC9",
-                      }}
-                    >
-                      <CustomText
-                        style={[styles['headerLabel'],{
-                          flex: 5,
-                         
-                        }]}
-                      >
-                        Description
-                      </CustomText>
-
-                      <CustomText
-                        style={[styles['headerLabel'],{
-                          flex: 1,
-                          paddingHorizontal:0,
-                         //paddingLeft:0,
-                        }]}
-                      >
-                        {"Points"}
-                      </CustomText>
-                    </View>
-                    {Result[1]["BasePriceInfo"].map((e, i) => (
-                      <View
-                        style={{
-                          gap: 3,
-                        }}
-                      >
-                        <View
-                          style={[styles['contentWrapper'],{
-                            
-                            backgroundColor:
-                              e["ItemDesc"].indexOf("Final Base") != -1 ||
-                              e["ItemDesc"].indexOf("Final Price") != -1
-                                ? "#DEEAF1"
-                                : "inherit",
-                          }]}
-                        >
-                          <View
-                            style={{
-                              flex: 5,
+                              // borderRightWidth: 1,
+                              // borderColor: "#dddddd",
                               paddingLeft: 15,
                             }}
                           >
                             <CustomText
                               style={{
                                 fontSize: 12,
-                                paddingVertical: 5,
-                                color: "#000000",
+                                paddingVertical: 6,
+                                color: e["Disc"].toString().includes("(")
+                                  ? "green"
+                                  : "red",
                               }}
-                              bold={
-                                e["ItemDesc"].indexOf("Final Base") != -1 ||
-                                e["ItemDesc"].indexOf("Final Price") != -1
-                              }
                             >
-                              {e["ItemDesc"]}
+                              {e["Disc"]}
                             </CustomText>
                           </View>
-
                           <View
                             style={{
                               flex: 1,
+                              // borderRightWidth: 1,
+                              // borderColor: "#dddddd",
+                              paddingLeft: 15,
                             }}
                           >
                             <CustomText
                               style={{
                                 fontSize: 12,
-                                color: "#000000",
-                                textAlign: "left",
-                                paddingVertical: 0,
+                                paddingVertical: 6,
+                                color: e["AddonAmount"].includes("(")
+                                  ? "green"
+                                  : "red",
                               }}
-                              bold={
-                                e["ItemDesc"].indexOf("Final Base") != -1 ||
-                                e["ItemDesc"].indexOf("Final Price") != -1
-                              }
                             >
-                              {e["PointsValue"]}
+                              {e["AddonAmount"]}
                             </CustomText>
                           </View>
                         </View>
                       </View>
                     ))}
+                    <View
+                      style={{
+                        gap: 3,
+                      }}
+                    >
+                      <View
+                        style={{
+                          flex: 5,
+                          flexDirection: "row",
+                          borderTopWidth: 2,
+                          borderTopColor: "#999999",
+                          backgroundColor: "#fff",
+                          backgroundColor: "#DEEAF1",
+                        }}
+                      >
+                        <View
+                          style={{
+                            flex: 2,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: "#000",
+                            }}
+                          >
+                            {"Selected Rate & Price"}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            // borderRightWidth: 1,
+                            // borderColor: "#dddddd",
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: "#000000",
+                            }}
+                          >
+                            {Total["FinalPrice"]["finalRate"]}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: Total["FinalPrice"]["finalPoints"]
+                                .toString()
+                                .includes("(")
+                                ? "green"
+                                : "red",
+                            }}
+                          >
+                            {Total["FinalPrice"]["finalPoints"]}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: Total["FinalPrice"]["finalPoints"]
+                                .toString()
+                                .includes("(")
+                                ? "green"
+                                : "red",
+                            }}
+                          >
+                            {Total["FinalPrice"]["finalPoints"]}
+                          </CustomText>
+                        </View>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        gap: 3,
+                      }}
+                    >
+                      <View
+                        style={{
+                          flex: 5,
+                          flexDirection: "row",
+                          borderTopWidth: 1,
+                          borderTopColor: "#999999",
+                          backgroundColor: "#fff",
+                          backgroundColor: "#fff",
+                        }}
+                      >
+                        <View
+                          style={{
+                            flex: 2,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: "#000",
+                            }}
+                          >
+                            {"Lender Comp"}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            // borderRightWidth: 1,
+                            // borderColor: "#dddddd",
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: "#000000",
+                            }}
+                          >
+                            {""}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                            }}
+                          >
+                            {formatPercentage(
+                              LenderComp["LenderCompPoint"],
+                              3
+                            ) || "0.00%"}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                            }}
+                          >
+                            {formatCurrency(LenderComp["LenderCompAmt"]) ||
+                              "$0.00"}
+                          </CustomText>
+                        </View>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        gap: 3,
+                      }}
+                    >
+                      <View
+                        style={{
+                          flex: 5,
+                          flexDirection: "row",
+                          borderTopWidth: 1,
+                          borderTopColor: "#999999",
+                          backgroundColor: "#fff",
+                          backgroundColor: "#fff",
+                        }}
+                      >
+                        <View
+                          style={{
+                            flex: 2,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: "#000",
+                            }}
+                          >
+                            {"Final Rate & Price"}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            // borderRightWidth: 1,
+                            // borderColor: "#dddddd",
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: "#000000",
+                            }}
+                          >
+                            {Total["FinalPrice"]["finalRate"]}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: Total["FinalPrice"]["LenderCompPoint"]
+                                .toString()
+                                .includes("(")
+                                ? "green"
+                                : "red",
+                            }}
+                          >
+                            {Total["FinalPrice"]["LenderCompPoint"]}
+                          </CustomText>
+                        </View>
+                        <View
+                          style={{
+                            flex: 1,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 12,
+                              paddingVertical: 6,
+                              color: Total["FinalPrice"]["LenderCompAmt"]
+                                .toString()
+                                .includes("(")
+                                ? "green"
+                                : "red",
+                            }}
+                          >
+                            {Total["FinalPrice"]["LenderCompAmt"]}
+                          </CustomText>
+                        </View>
+                      </View>
+                    </View>
                   </View>
-                )}
-              </View>
+                </View>
+              ) : (
+                <View>
+                  {WorstRateSheetName != undefined ? (
+                    <View style={styles["Table"]}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          flex: 4,
+                          backgroundColor: "#508BC9",
+                          // paddingVertical: 3,
+                        }}
+                      >
+                        <CustomText
+                          style={{
+                            flex: 3,
+                            flexDirection: "row",
+                            textAlign: "left",
+                            fontSize: 14,
+                            borderRightWidth: 2,
+                            borderColor: "#32CD32",
+                            color: "#fff",
+                            paddingVertical: 10,
+                            paddingLeft: 15,
+                          }}
+                        >
+                          Description
+                        </CustomText>
+                        <CustomText
+                          style={{
+                            flex: 1,
+                            flexDirection: "row",
+                            textAlign: "center",
+                            fontSize: 14,
+                            borderRightWidth: 2,
+                            borderTopWidth: 2,
+                            borderColor: "#32CD32",
+                            color: "#fff",
+                            paddingLeft: 11,
+                            paddingVertical: 10,
+                          }}
+                        >
+                          {RateSheetName}
+                        </CustomText>
+                        <CustomText
+                          style={{
+                            flex: 1,
+                            flexDirection: "row",
+                            textAlign: "center",
+                            fontSize: 14,
+                            color: "#fff",
+                            marginLeft: 10,
+                            paddingVertical: 10,
+                          }}
+                        >
+                          {WorstRateSheetName}
+                        </CustomText>
+                      </View>
+                      {Result[1]["BasePriceInfo"].map((e, i) => (
+                        <View
+                          style={{
+                            gap: 3,
+                          }}
+                        >
+                          <View
+                            style={{
+                              flex: 4,
+                              flexDirection: "row",
+                              borderTopWidth: 1,
+                              borderTopColor: "#dddddd",
+                              backgroundColor:
+                                e["ItemDesc"].indexOf("Final Base") != -1 ||
+                                e["ItemDesc"].indexOf("Final Price") != -1
+                                  ? "#DEEAF1"
+                                  : "inherit",
+                            }}
+                          >
+                            <View
+                              style={{
+                                flex: 3,
+                                // borderRightWidth: 1,
+                                // borderColor: "#dddddd",
+                                paddingLeft: 15,
+                              }}
+                            >
+                              <CustomText
+                                style={{
+                                  fontSize: 12,
+                                  paddingVertical: 6,
+                                  color: "#000000",
+                                }}
+                                bold={
+                                  e["ItemDesc"].indexOf("Final Base") != -1 ||
+                                  e["ItemDesc"].indexOf("Final Price") != -1
+                                }
+                              >
+                                {e["ItemDesc"]}
+                              </CustomText>
+                            </View>
+                            <View
+                              style={{
+                                flex: 1,
+                                borderRightWidth: 2,
+                                borderLeftWidth: 2,
+                                borderColor: "#32CD32",
+                                paddingRight: 10,
+                                borderBottomWidth:
+                                  e["ItemDesc"].indexOf("Final Price") != -1
+                                    ? 2
+                                    : 0,
+                              }}
+                            >
+                              <CustomText
+                                style={{
+                                  flex: 1,
+                                  fontSize: 12,
+                                  color: "#000000",
+                                  textAlign: "center",
+                                  marginTop: 6,
+                                }}
+                                bold={
+                                  e["ItemDesc"].indexOf("Final Base") != -1 ||
+                                  e["ItemDesc"].indexOf("Final Price") != -1
+                                }
+                              >
+                                {e["PointsValueOne"]}
+                              </CustomText>
+                            </View>
+                            <View
+                              style={{
+                                flex: 1,
+                                paddingLeft: 10,
+                                backgroundColor:
+                                  e["PointsValueOne"] != e["PointsValueTwo"] &&
+                                  !(
+                                    e["ItemDesc"].indexOf("Final Base") != -1 ||
+                                    e["ItemDesc"].indexOf("Final Price") != -1
+                                  )
+                                    ? "yellow"
+                                    : "inherit",
+                              }}
+                            >
+                              <CustomText
+                                style={{
+                                  fontSize: 11,
+                                  paddingRight: 10,
+                                  color: "#333333",
+                                  textAlign: "right",
+                                  marginTop: 4,
+                                }}
+                                bold={
+                                  e["ItemDesc"].indexOf("Final Base") != -1 ||
+                                  e["ItemDesc"].indexOf("Final Price") != -1
+                                }
+                              >
+                                {e["PointsValueTwo"]}
+                              </CustomText>
+                            </View>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <View style={styles["Table"]}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          flex: 6,
+                          backgroundColor: "#508BC9",
+                        }}
+                      >
+                        <CustomText
+                          style={[
+                            styles["headerLabel"],
+                            {
+                              flex: 5,
+                            },
+                          ]}
+                        >
+                          Description
+                        </CustomText>
+
+                        <CustomText
+                          style={[
+                            styles["headerLabel"],
+                            {
+                              flex: 1,
+                              paddingHorizontal: 0,
+                              //paddingLeft:0,
+                            },
+                          ]}
+                        >
+                          {"Points"}
+                        </CustomText>
+                      </View>
+                      {Result[1]["BasePriceInfo"].map((e, i) => (
+                        <View
+                          style={{
+                            gap: 3,
+                          }}
+                        >
+                          <View
+                            style={[
+                              styles["contentWrapper"],
+                              {
+                                backgroundColor:
+                                  e["ItemDesc"].indexOf("Final Base") != -1 ||
+                                  e["ItemDesc"].indexOf("Final Price") != -1
+                                    ? "#DEEAF1"
+                                    : "inherit",
+                              },
+                            ]}
+                          >
+                            <View
+                              style={{
+                                flex: 5,
+                                paddingLeft: 15,
+                              }}
+                            >
+                              <CustomText
+                                style={{
+                                  fontSize: 12,
+                                  paddingVertical: 5,
+                                  color: "#000000",
+                                }}
+                                bold={
+                                  e["ItemDesc"].indexOf("Final Base") != -1 ||
+                                  e["ItemDesc"].indexOf("Final Price") != -1
+                                }
+                              >
+                                {e["ItemDesc"]}
+                              </CustomText>
+                            </View>
+
+                            <View
+                              style={{
+                                flex: 1,
+                              }}
+                            >
+                              <CustomText
+                                style={{
+                                  fontSize: 12,
+                                  color: "#000000",
+                                  textAlign: "left",
+                                  paddingVertical: 0,
+                                }}
+                                bold={
+                                  e["ItemDesc"].indexOf("Final Base") != -1 ||
+                                  e["ItemDesc"].indexOf("Final Price") != -1
+                                }
+                              >
+                                {e["PointsValue"]}
+                              </CustomText>
+                            </View>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
-            <View style={styles.footer}>
+            {/* <View style={styles.footer}>
               <Button
                 title={
                   <CustomText
@@ -336,7 +924,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                   handleAdjustmentDetails(false, "");
                 }}
               />
-            </View>
+            </View> */}
           </View>
         </View>
       </Modal>
@@ -399,7 +987,6 @@ const styles = StyleSheet.create({
     borderColor: "#dddddd",
   },
   headerLabel: {
-
     flexDirection: "row",
     textAlign: "left",
     fontSize: 14,
@@ -407,12 +994,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 15,
   },
-  contentWrapper:{
+  contentWrapper: {
     flex: 6,
     flexDirection: "row",
     borderTopWidth: 1,
     borderTopColor: "#dddddd",
-  }
+  },
 });
 
 export default AdjustmentDetailsNew;

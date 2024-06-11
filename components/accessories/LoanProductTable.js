@@ -190,8 +190,16 @@ const LoanProductTable = (props) => {
       setOpen({ ...Open, Adjustments: false });
       return;
     }
-    let { LineId, LockPeriodID } = result;
-    let changeRateXML = "";
+    let { LineId, LockPeriodID,CommonId,Total,LenderComp } = result;
+    let changeRateXML = "", Addons=[], selectedRate = {}, ProfitMargin ={};
+    try {
+      
+      Addons = RawRateBand[CommonId]?.['Addons']?.[LineId]|| []
+      selectedRate = ActiveRate[LineId] || {}
+      ProfitMargin= {Addons,selectedRate,Total,LenderComp}
+    } catch (error) {
+      console.error('Error in handleAdjustmentDetails ==>', error)
+    }
     if (contextDetails["ChangeRate"] || contextDetails["FloatDown"]) {
       if (!contextDetails["changeRateXML"]) {
         changeRateXML = handleConstructXML(contextDetails["ChangeRateJson"]);
@@ -222,6 +230,9 @@ const LoanProductTable = (props) => {
       response[0]["RootObjects"][0]["Rate"] = result["Row"]["IntRate"];
       response[0]["RootObjects"][0]["LockDay"] =
         result["Row"]["LockPeriodDays"];
+
+      response.push({ProfitMargin:ProfitMargin||[]})
+
       setOpen({ ...Open, Adjustments: true, Result: response });
     });
   };

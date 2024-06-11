@@ -28,6 +28,7 @@ import BorrowerInfo from "../BorrowerInfo";
 import { Fragment } from "react";
 import { Modal } from "react-native-web";
 import AddressValidation from "./AddressValidation";
+import AdjustmentDetailsNew from "../AdjustmentDetailsNew";
 const LoanProductTable = (props) => {
   const {
     LoanProducts,
@@ -91,7 +92,7 @@ const LoanProductTable = (props) => {
     if (Object.keys(RawRateBand).length == 0)
       myViewRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-  const handleViewPITI = (type, obj) => {
+  const handleViewPITI = async (type, obj) => {
     let { LPA_CommonData, LineId } = obj;
     if (obj != "") {
       let Product = LoanProducts.filter(
@@ -99,7 +100,8 @@ const LoanProductTable = (props) => {
       );
       Payment = Product[0]["PaymentWithoutAddons"];
 
-      if(ActiveRate?.[LPA_CommonData]||false) LineId = ActiveRate[LPA_CommonData]['LineId']
+      if (ActiveRate?.[LPA_CommonData] || false)
+        LineId = ActiveRate[LPA_CommonData]["LineId"];
       let Row = PaymentDetails.filter((e) => e["LineId"] == LineId);
       let {
         PropFin,
@@ -123,6 +125,18 @@ const LoanProductTable = (props) => {
         );
         Payment = RateBand[0]["MonthlyPayment"];
       }
+      let { Run } = Product[0];
+      let response = await handleGetUpdatedPaymentSection(Run, LineId);
+      let UpdatedPaymentSectionObj = {};
+      try {
+        UpdatedPaymentSectionObj =
+          JSON.parse(
+            JSON.parse(response)?.["Table"]?.[0]?.["PaymentJson"] || "[]"
+          )?.["PaymentDetails"]?.[0] || {};
+        PropMI = UpdatedPaymentSectionObj["PropMI"] || "0";
+      } catch (error) {
+        console.error("Error in handleGetUpdatedPaymentSection =>", error);
+      }
       let Result = {
         Payment,
         PropFin,
@@ -134,8 +148,6 @@ const LoanProductTable = (props) => {
         PropOther,
         PropRETaxes,
       };
-      let { Run } = Product[0];
-      handleGetUpdatedPaymentSection(Run, LineId);
       setOpen({ ...Open, PITI: type, Result: Result, LineId, LPA_CommonData });
     } else {
       setOpen({ ...Open, PITI: type }); // false
@@ -343,7 +355,7 @@ const LoanProductTable = (props) => {
       let checkPreQual = await IsPreQualLoan(LoanId, 0);
       let isPreQual = await IsPreQualLoan(LoanId, EmpNum);
       let showSSNPrompt = false;
-      if (contextDetails["SSN"].length) {
+      if (contextDetails["SSN"]?.length) {
         contextDetails["SSN"].forEach((e) => {
           if (e.length < 8) showSSNPrompt = true;
         });
@@ -488,7 +500,8 @@ const LoanProductTable = (props) => {
     }
   };
   const handleLockAfterBorInfoValidation = async (action, LineId) => {
-    let InputParams = contextDetails["InputData"];
+    let InputParams = contextDetails["InputData"],
+      allowSave = true;
     if (InputParams["DataIn"].length > 6) {
       let index = fnGetIndex(InputParams["DataIn"], "BorrInfo");
       InputParams["DataIn"][index]["BorrInfo"].forEach((e) => {
@@ -502,6 +515,16 @@ const LoanProductTable = (props) => {
               : val
             : Number(val);
         }
+        try {
+          if (
+            e["FirstName"].length &&
+            e["LastName"].length && (contextDetails?.["TBD"] == 0 || action.indexOf("Lock") == -1)
+          )
+            allowSave = true;
+          else allowSave = false;
+        } catch (error) {
+          allowSave = true;
+        }
       });
       index = fnGetIndex(InputParams["DataIn"], "LoanParamInfo");
       InputParams["DataIn"][index]["LoanParamInfo"][0]["LoanOfficer"] =
@@ -509,6 +532,21 @@ const LoanProductTable = (props) => {
       index = fnGetIndex(InputParams["DataIn"], "RootObjects");
       InputParams["DataIn"][index]["RootObjects"][0]["FromNewRateLock"] =
         contextDetails["OnloadProcess"] == "PQ" ? 2 : 1;
+    } else {
+      let index = fnGetIndex(InputParams["DataIn"], "BorrInfo");
+
+      let BorrObj = InputParams["DataIn"][index]["BorrInfo"][0];
+      try {
+        if (
+          BorrObj["FirstName"].length &&
+          BorrObj["LastName"].length  && (contextDetails?.["TBD"] == 0 || action.indexOf("Lock") == -1)
+         // BorrObj["SSN"] && BorrObj["SSN"].replace("-", "").length == 9
+        )
+          allowSave = true;
+        else allowSave = false;
+      } catch (error) {
+        allowSave = true;
+      }
     }
     let obj = {
       LoanID: contextDetails["LoanId"],
@@ -525,7 +563,7 @@ const LoanProductTable = (props) => {
       let borInfo = contextDetails["InputData"]["DataIn"][1]["BorrInfo"];
       let blockSaving = false;
       borInfo.map((e) => {
-        if (e["SSN"].length != 11) {
+        if ((e["SSN"]||'').length != 11) {
           blockSaving = true;
         }
       });
@@ -546,6 +584,7 @@ const LoanProductTable = (props) => {
         });
       }
     } catch (error) {}
+    if (!allowSave) return; // Restrict when required fields are not filled
     console.log("saving the searching info ==>", contextDetails["InputData"]);
     setContextDetails((prevContext) => {
       return {
@@ -2224,7 +2263,11 @@ const LoanProductTable = (props) => {
                         },
                       ]}
                     >
-                      {!contextDetails["NoRateBandAvail"] && !ActiveRate[ActiveRate?.[row?.['LPA_CommonData']]?.['LineId']]?.['IsDummy']||'' ? (
+                      {(!contextDetails["NoRateBandAvail"] &&
+                        !ActiveRate[
+                          ActiveRate?.[row?.["LPA_CommonData"]]?.["LineId"]
+                        ]?.["IsDummy"]) ||
+                      "" ? (
                         <Button
                           title={
                             <CustomText
@@ -2251,7 +2294,7 @@ const LoanProductTable = (props) => {
                             );
                           }}
                         />
-                      ):(null)}
+                      ) : null}
                     </CustomText>
                   </View>
                 ) : VisibleRateBand[row["LineId"]] ? (
@@ -2324,12 +2367,20 @@ const LoanProductTable = (props) => {
             handleSavePITI={handleSavePITI}
           />
         )}
-        {Open["Adjustments"] && (
-          <AdjustmentDetails
-            Open={Open}
-            handleAdjustmentDetails={handleAdjustmentDetails}
-          />
-        )}
+        {Open["Adjustments"] &&
+          ([32179, 2099].includes(Number(contextDetails["EmpNum"])) ? (
+            <>
+              <AdjustmentDetailsNew
+                Open={Open}
+                handleAdjustmentDetails={handleAdjustmentDetails}
+              />
+            </>
+          ) : (
+            <AdjustmentDetails
+              Open={Open}
+              handleAdjustmentDetails={handleAdjustmentDetails}
+            />
+          ))}
         {Open["LenderRank"] && (
           <LenderRank Open={Open} handleLenderRank={handleLenderRank} />
         )}

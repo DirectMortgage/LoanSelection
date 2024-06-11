@@ -920,14 +920,16 @@ const fnSortBy = (array, key) => {
   });
 };
 
-const handleGetUpdatedPaymentSection = (RunID, Lineid) => {
+const handleGetUpdatedPaymentSection = async(RunID, Lineid) => {
   let obj = { RunID, Lineid };
-  handleAPI({
+  let Response = await handleAPI({
     name: "GetUpdatedPaymentSection",
     params: obj,
   }).then((response) => {
     console.log("GetUpdatedPaymentSection ===>", response);
+    return response;
   });
+  return Response;
 };
 
 const handleUpdateLenderComp = (EmpNum, Value, Flag) => {

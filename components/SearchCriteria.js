@@ -487,7 +487,7 @@ const SearchCriteria = ({
   ];
   let LoanOfficerOpt = [];
   const handlePageLoad = async () => {
-    handleProdLoading(); // Foe production alone
+    handleProdLoading(); // For production alone
     await fnGetTypeOptions();
     let queryString = queryStringToObject();
     let parentQueryString = queryStringToObject(window.parent.location.href);
@@ -554,7 +554,8 @@ const SearchCriteria = ({
     });
   };
   const handleAddBorrower = (Type, Id) => {
-    let FICO = 0;
+    let FICO = 0,SSN = [];
+    SSN = contextDetails['SSN'] || []
     setSearchDetails((prevDetails) => {
       FICO = prevDetails["FICO Score"];
       return { ...prevDetails };
@@ -584,12 +585,23 @@ const SearchCriteria = ({
       if (contextDetails["OnloadProcess"] == "PQ")
         setBorrower((prevBorrower) => [...prevBorrower, ...brw]);
       setVAMilitary((prevVA) => [...prevVA, [...VAM]]);
+      
+      SSN.push('')
+      
     } else {
       setBorrower((prevBorrower) =>
         prevBorrower.filter((item, index) => index != Id)
       );
       setVAMilitary((prevVA) => prevVA.filter((item, index) => index !== Id));
+
+      SSN =  SSN.filter((item, index) => index != Id)
     }
+    setContextDetails((prevContext) => {
+      return {
+        ...prevContext,
+        SSN
+       };
+    });
   };
   const handleChangedDetails = (obj) => {
     const { name, value, index, iIndex, action } = obj;
@@ -1586,9 +1598,14 @@ const SearchCriteria = ({
         !(miType.length == 1 && miType.includes("7"))
       ) {
         //let res = await handleOpenPopUp_MIQuote(contextDetails["LoanId"], 0); //CMS_SP_isMIQuote_Exists
+        let QualifyingFICO =null
+        if(borrowerInfo.length)
+          QualifyingFICO = fnFindMinFICO(borrowerInfo)
+        else
+          QualifyingFICO = searchDetails['FICO Score']
         let res = await handleProceedRunMIQuote(
           contextDetails["LoanId"],
-          searchDetails["latestModifiedFICO"] || "",
+          QualifyingFICO || searchDetails["latestModifiedFICO"],
           cleanValue(searchDetails["Loan Amount 1st"]),
           cleanValue(searchDetails["Loan Amount 2nd"]),
           searchDetails["LTV"],
@@ -1618,117 +1635,7 @@ const SearchCriteria = ({
             fromRatelock: 1,
           };
           handleGetMIQuote(obj_);
-          // let component = (
-          //   <View style={{ gap: 20 }}>
-          //     <View
-          //       style={{
-          //         marginBottom: 3,
-          //         padding: 15,
-          //         paddingBottom: 0,
-          //         gap: 3,
-          //       }}
-          //     >
-          //       <CustomText>
-          //         {
-          //           "Would you also like to get a new MI Quote, while the AUS is running?"
-          //         }
-          //       </CustomText>
-          //     </View>
-          //     <View
-          //       style={{
-          //         justifyContent: "flex-end",
-          //         flexDirection: "row",
-          //         padding: 15,
-          //         gap: 5,
-          //       }}
-          //     >
-          //       <Button
-          //         forwardedRef={btnMIQuote}
-          //         title={
-          //           <CustomText
-          //             bold={false}
-          //             style={{ fontSize: 13, color: "#fff", fontWeight: 200 }}
-          //           >
-          //             {"Yes"}
-          //           </CustomText>
-          //         }
-          //         style={[
-          //           styles["btn"],
-          //           {
-          //             paddingVertical: 10,
-          //             borderWidth: 2,
-          //             borderColor: "#428bca",
-          //             width: 80,
-          //           },
-          //         ]}
-          //         onPress={() => {
-          //           let obj_ = {
-          //             LoanID: contextDetails["LoanId"],
-          //             SessionID: contextDetails["queryString"]["SessionId"],
-          //           };
-          //           handleGetMIQuote(obj_);
-          //           handleWarningModal();
-          //         }}
-          //       />
-          //       <Button
-          //         title={
-          //           <CustomText
-          //             bold={false}
-          //             style={{ fontSize: 13, color: "#fff", fontWeight: 200 }}
-          //           >
-          //             {"No"}
-          //           </CustomText>
-          //         }
-          //         style={[
-          //           styles["btn"],
-          //           {
-          //             paddingVertical: 10,
-          //             borderColor: "#262626",
-          //             borderWidth: 2,
-          //             backgroundColor: "#595959",
-          //             width: 80,
-          //           },
-          //         ]}
-          //         onPress={() => {
-          //           handleWarningModal();
-          //         }}
-          //       />
-          //       <Button
-          //         title={
-          //           <CustomText
-          //             bold={false}
-          //             style={{
-          //               fontSize: 13,
-          //               color: "#428bca",
-          //               fontWeight: 200,
-          //             }}
-          //           >
-          //             {"Delay this prompt for 10 minutes"}
-          //           </CustomText>
-          //         }
-          //         style={[
-          //           styles["btn"],
-          //           {
-          //             paddingVertical: 10,
-          //             borderColor: "#428bca",
-          //             borderWidth: 2,
-          //             backgroundColor: "white",
-          //           },
-          //         ]}
-          //         onPress={() => {
-          //           handleOpenPopUp_MIQuote(contextDetails["LoanId"], 1);
-          //           handleWarningModal();
-          //         }}
-          //       />
-          //     </View>
-          //   </View>
-          // );
-          // setModalOpen({
-          //   ...modalOpen,
-          //   RateSheetRunWarning: false,
-          //   Msg: false,
-          //   component: component,
-          // });
+         
         }
       }
     } catch (error) {
@@ -3708,9 +3615,10 @@ const SearchCriteria = ({
                   gap: 20,
                   alignItems: "baseline",
                   maxWidth: "100%",
+                  marginHorizontal: 9,
                 }}
               >
-                <CustomText
+                {/* <CustomText
                 testID="txtProductSearch"
                   style={{
                     fontSize: isMobileWeb ? 14:16,
@@ -3720,7 +3628,7 @@ const SearchCriteria = ({
                   }}
                 >
                   Loan Product Search
-                </CustomText>
+                </CustomText> */}
 
                 <View
                   style={{

@@ -397,7 +397,7 @@ const LockConfirmation = (props) => {
       setLockDetails((preLockDetails) => {
         return {
           ...preLockDetails,
-          leadsourceright: 1, //response["Column1"],
+          leadsourceright: response["Column1"], // 1
         };
       });
       //console.log("GetLeadSourceRights ==>", response);

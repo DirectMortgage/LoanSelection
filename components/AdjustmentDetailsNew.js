@@ -147,6 +147,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                           styles["headerLabel"],
                           {
                             flex: 2,
+                            paddingLeft:10
                           },
                         ]}
                       >

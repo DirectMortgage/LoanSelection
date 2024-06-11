@@ -2379,7 +2379,7 @@ const LoanProductTable = (props) => {
           />
         )}
         {Open["Adjustments"] &&
-          ([32179, 2099].includes(Number(contextDetails["EmpNum"])) ? (
+          ([32179, 2099,26945].includes(Number(contextDetails["EmpNum"])) ? (
             <>
               <AdjustmentDetailsNew
                 Open={Open}

@@ -212,8 +212,9 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                             style={{
                               fontSize: 12,
                               paddingVertical: 6,
-                              color: "#000",
+                              color: "#000000",
                             }}
+                            bold={true}
                           >
                             {"Base Rate & Price"}
                           </CustomText>
@@ -232,6 +233,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               paddingVertical: 6,
                               color: "#000000",
                             }}
+                            bold={true}
                           >
                             {selectedRate["IntRate"]}
                           </CustomText>
@@ -249,8 +251,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               color: selectedRate["BasePoints"]
                                 .toString()
                                 .includes("(")
-                                ? "green"
-                                : "red",
+                                ? "#2E862C"
+                                : "#C14242",
                             }}
                           >
                             {selectedRate["BasePoints"]}
@@ -269,8 +271,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               color: selectedRate["BaseAmt"]
                                 .toString()
                                 .includes("-")
-                                ? "green"
-                                : "red",
+                                ? "#2E862C"
+                                : "#C14242",
                             }}
                           >
                             {selectedRate["BaseAmt"].includes("-")
@@ -348,8 +350,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                                 fontSize: 12,
                                 paddingVertical: 6,
                                 color: e["Disc"].toString().includes("(")
-                                  ? "green"
-                                  : "red",
+                                  ? "#2E862C"
+                                  : "#C14242",
                               }}
                             >
                               {e["Disc"]}
@@ -368,8 +370,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                                 fontSize: 12,
                                 paddingVertical: 6,
                                 color: e["AddonAmount"].includes("(")
-                                  ? "green"
-                                  : "red",
+                                  ? "#2E862C"
+                                  : "#C14242",
                               }}
                             >
                               {e["AddonAmount"]}
@@ -405,6 +407,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               paddingVertical: 6,
                               color: "#000",
                             }}
+                            bold={true}
                           >
                             {"Selected Rate & Price"}
                           </CustomText>
@@ -423,6 +426,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               paddingVertical: 6,
                               color: "#000000",
                             }}
+                            bold={true}
                           >
                             {Total["FinalPrice"]["finalRate"]}
                           </CustomText>
@@ -440,8 +444,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               color: Total["FinalPrice"]["finalPoints"]
                                 .toString()
                                 .includes("(")
-                                ? "green"
-                                : "red",
+                                ? "#2E862C"
+                                : "#C14242",
                             }}
                           >
                             {Total["FinalPrice"]["finalPoints"]}
@@ -460,8 +464,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               color: Total["FinalPrice"]["finalPoints"]
                                 .toString()
                                 .includes("(")
-                                ? "green"
-                                : "red",
+                                ? "#2E862C"
+                                : "#C14242",
                             }}
                           >
                             {Total["FinalPrice"]["finalPoints"]}
@@ -496,6 +500,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               paddingVertical: 6,
                               color: "#000",
                             }}
+                            bold={true}
                           >
                             {"Lender Comp"}
                           </CustomText>
@@ -529,6 +534,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               fontSize: 12,
                               paddingVertical: 6,
                             }}
+                            bold={true}
                           >
                             {formatPercentage(
                               LenderComp["LenderCompPoint"],
@@ -547,6 +553,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               fontSize: 12,
                               paddingVertical: 6,
                             }}
+                            bold={true}
                           >
                             {formatCurrency(LenderComp["LenderCompAmt"]) ||
                               "$0.00"}
@@ -581,6 +588,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               paddingVertical: 6,
                               color: "#000",
                             }}
+                            bold={true}
                           >
                             {"Final Rate & Price"}
                           </CustomText>
@@ -599,6 +607,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               paddingVertical: 6,
                               color: "#000000",
                             }}
+                            bold={true}
                           >
                             {Total["FinalPrice"]["finalRate"]}
                           </CustomText>
@@ -616,8 +625,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               color: Total["FinalPrice"]["LenderCompPoint"]
                                 .toString()
                                 .includes("(")
-                                ? "green"
-                                : "red",
+                                ? "#2E862C"
+                                : "#C14242",
                             }}
                           >
                             {Total["FinalPrice"]["LenderCompPoint"]}
@@ -636,8 +645,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               color: Total["FinalPrice"]["LenderCompAmt"]
                                 .toString()
                                 .includes("(")
-                                ? "green"
-                                : "red",
+                                ? "#2E862C"
+                                : "#C14242",
                             }}
                           >
                             {Total["FinalPrice"]["LenderCompAmt"]}

@@ -415,7 +415,8 @@ const SearchCriteria = ({
             "Lenders to Search": LendersToSearch,
             TBD: TBD,
             "MI Type": MortInsPremium || 0,
-            "DTI": DTI
+            "DTI": DTI,
+            "Mortgage Insurance Type": MortInsPremium || 0,
           };
         });
         //*************************************** Search section details binding portion *****************************
@@ -1600,7 +1601,7 @@ const SearchCriteria = ({
 
     // for MI Quote
     try {
-      let miType = searchDetails["MI Type"].split(",");
+      let miType = searchDetails["Mortgage Insurance Type"].split(",");
       if (
         parseFloat(cleanValue(searchDetails["LTV"])) > 80 &&
         !(miType.length == 1 && miType.includes("7"))
@@ -2866,7 +2867,7 @@ const SearchCriteria = ({
                 SearchNoPPP: searchDetails["NoPPP"] || "0", //other option
                 LendersToSearch: searchDetails["Lenders to Search"] || "",
                 TBD: searchDetails["TBD"] || 0,
-                MortInsPremium: searchDetails["MI Type"] || 1,
+                MortInsPremium: searchDetails["Mortgage Insurance Type"] || "",
                 //ChangeLnPrgm :
               },
             ],

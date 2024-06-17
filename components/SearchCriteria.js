@@ -132,6 +132,7 @@ const SearchCriteria = ({
     TBD: "0",
     ddlRateMethod: 1,
     "Rent Ratio": "$0.00",
+    "DTI": "0.00%"
   });
 
   const topMenuUseref = useRef();
@@ -180,7 +181,6 @@ const SearchCriteria = ({
         let {
           LienPosition,
           NoOfUnits,
-
           OccupancyType,
           PropertyTypeType,
           SubjectAddress,
@@ -220,6 +220,7 @@ const SearchCriteria = ({
           SecLenderNum,
           TermsInMonth2,
           LoanOfficer,
+          DTI
         } = LoanInfo[Index]["LoanParamInfo"][0];
 
         Index = fnGetIndex(LoanInfo, "LoanSearchInfo");
@@ -414,6 +415,7 @@ const SearchCriteria = ({
             "Lenders to Search": LendersToSearch,
             TBD: TBD,
             "MI Type": MortInsPremium || 0,
+            "DTI": DTI
           };
         });
         //*************************************** Search section details binding portion *****************************
@@ -1307,6 +1309,12 @@ const SearchCriteria = ({
         dataType: "Currency",
         type: "input",
       },
+      {
+        columnName: "DTI",
+        columnValue: " ",
+        dataType: "Percentage",
+        type: "input",
+      }
     ];
     const TermsOptions = [
       {
@@ -2770,6 +2778,7 @@ const SearchCriteria = ({
                 CorresLoan: "0", // *
                 CorrespondLoanType: "0",
                 IsSelfEmployed: searchDetails["Self Employed"] || "0",
+                DTI: searchDetails["DTI"] || "0"
               },
             ],
           },

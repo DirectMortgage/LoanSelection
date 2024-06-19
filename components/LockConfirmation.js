@@ -2915,12 +2915,12 @@ const LockConfirmation = (props) => {
       let tempValues = JSON.parse(localStorage.getItem("LoanSelectioInfo"))[
         contextDetails["LoanId"]
       ];
-      let { finalRate, finalPoints, finalAmount, BasePoints, BaseAmount } =
+      let { finalRate, finalPoints, finalAmount, BasePoints, BaseAmount, InterestRate } =
         tempValues["RateInfo"];
       setLockDetails((prevLockDetails) => {
         return {
           ...prevLockDetails,
-          compratereq: finalRate,
+          compratereq: InterestRate, //finalRate,
           comprateadj: finalRate,
           comppointsreq: cleanValue(BasePoints, 3),
           RateChosenPoint: cleanValue(finalPoints, 3),
@@ -3603,7 +3603,8 @@ const LockConfirmation = (props) => {
                                 {fnCalculateValue(
                                   "Adjustment",
                                   formatPercentage(
-                                    row["rate"].length >= 6
+                                    //row["rate"].length >= 6
+                                    cleanValue(row["rate"]).length >= 8
                                       ? parseFloat(row["rate"]) * 100
                                       : row["rate"],
                                     4

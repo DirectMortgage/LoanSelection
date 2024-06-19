@@ -26,9 +26,11 @@ import NotifyAlert from "./NotifyAlert";
 import WebViewiFrame from "./WebViewiFrame";
 import BorrowerInfo from "../BorrowerInfo";
 import { Fragment } from "react";
+import { Image } from "react-native-web";
 import { Modal } from "react-native-web";
 import AddressValidation from "./AddressValidation";
 import AdjustmentDetailsNew from "../AdjustmentDetailsNew";
+import SwatchOutlined from "./SwatchOutlined";
 const LoanProductTable = (props) => {
   const {
     LoanProducts,
@@ -93,6 +95,7 @@ const LoanProductTable = (props) => {
       myViewRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   const handleViewPITI = async (type, obj) => {
+    let IsMIProcessing = 0;
     let { LPA_CommonData, LineId } = obj;
     if (obj != "") {
       let Product = LoanProducts.filter(
@@ -134,6 +137,7 @@ const LoanProductTable = (props) => {
             JSON.parse(response)?.["Table"]?.[0]?.["PaymentJson"] || "[]"
           )?.["PaymentDetails"]?.[0] || {};
         PropMI = UpdatedPaymentSectionObj["PropMI"] || "0";
+        IsMIProcessing = UpdatedPaymentSectionObj["IsMIProcessing"] || "0";
       } catch (error) {
         console.error("Error in handleGetUpdatedPaymentSection =>", error);
       }
@@ -147,6 +151,7 @@ const LoanProductTable = (props) => {
         Total,
         PropOther,
         PropRETaxes,
+        IsMIProcessing,
       };
       setOpen({ ...Open, PITI: type, Result: Result, LineId, LPA_CommonData });
     } else {
@@ -190,15 +195,17 @@ const LoanProductTable = (props) => {
       setOpen({ ...Open, Adjustments: false });
       return;
     }
-    let { LineId, LockPeriodID,CommonId,Total,LenderComp } = result;
-    let changeRateXML = "", Addons=[], selectedRate = {}, ProfitMargin ={};
+    let { LineId, LockPeriodID, CommonId, Total, LenderComp } = result;
+    let changeRateXML = "",
+      Addons = [],
+      selectedRate = {},
+      ProfitMargin = {};
     try {
-      
-      Addons = RawRateBand[CommonId]?.['Addons']?.[LineId]|| []
-      selectedRate = ActiveRate[LineId] || {}
-      ProfitMargin= {Addons,selectedRate,Total,LenderComp}
+      Addons = RawRateBand[CommonId]?.["Addons"]?.[LineId] || [];
+      selectedRate = ActiveRate[ActiveRate?.[CommonId]?.["LineId"]] || {};
+      ProfitMargin = { Addons, selectedRate, Total, LenderComp };
     } catch (error) {
-      console.error('Error in handleAdjustmentDetails ==>', error)
+      console.error("Error in handleAdjustmentDetails ==>", error);
     }
     if (contextDetails["ChangeRate"] || contextDetails["FloatDown"]) {
       if (!contextDetails["changeRateXML"]) {
@@ -231,7 +238,7 @@ const LoanProductTable = (props) => {
       response[0]["RootObjects"][0]["LockDay"] =
         result["Row"]["LockPeriodDays"];
 
-      response.push({ProfitMargin:ProfitMargin||[]})
+      response.push({ ProfitMargin: ProfitMargin || [] });
 
       setOpen({ ...Open, Adjustments: true, Result: response });
     });
@@ -282,6 +289,7 @@ const LoanProductTable = (props) => {
         LockPeriodDesc,
         LockPeriodID,
         InterestRate,
+        iInterestRate, // with addons rate
         FinalAmt,
         FinalPoint,
         IntRateID,
@@ -311,11 +319,11 @@ const LoanProductTable = (props) => {
         InterestRate,
         BasePoints: BasePoints,
         IntRateID,
-        IntRate: InterestRate,
+        IntRate: iInterestRate, // with addons rate
         BaseAmount,
         finalAmount: FinalAmt,
         finalPoints: FinalPoint,
-        finalRate: InterestRate,
+        finalRate: iInterestRate,
         LineId,
         RateSheetName: RateSheetId,
         CompanyName: contextDetails["CompName"],
@@ -529,7 +537,8 @@ const LoanProductTable = (props) => {
         try {
           if (
             e["FirstName"].length &&
-            e["LastName"].length && (contextDetails?.["TBD"] == 0 || action.indexOf("Lock") == -1)
+            e["LastName"].length &&
+            (contextDetails?.["TBD"] == 0 || action.indexOf("Lock") == -1)
           )
             allowSave = true;
           else allowSave = false;
@@ -550,8 +559,9 @@ const LoanProductTable = (props) => {
       try {
         if (
           BorrObj["FirstName"].length &&
-          BorrObj["LastName"].length  && (contextDetails?.["TBD"] == 0 || action.indexOf("Lock") == -1)
-         // BorrObj["SSN"] && BorrObj["SSN"].replace("-", "").length == 9
+          BorrObj["LastName"].length &&
+          (contextDetails?.["TBD"] == 0 || action.indexOf("Lock") == -1)
+          // BorrObj["SSN"] && BorrObj["SSN"].replace("-", "").length == 9
         )
           allowSave = true;
         else allowSave = false;
@@ -574,7 +584,7 @@ const LoanProductTable = (props) => {
       let borInfo = contextDetails["InputData"]["DataIn"][1]["BorrInfo"];
       let blockSaving = false;
       borInfo.map((e) => {
-        if ((e["SSN"]||'').length != 11) {
+        if ((e["SSN"] || "").length != 11) {
           blockSaving = true;
         }
       });
@@ -709,14 +719,14 @@ const LoanProductTable = (props) => {
     }
     //Real Loan
     else if (action === "SelectAndLock" || action === "Select") {
-      let { finalRate, BasePoints, LockPeriods, finalPoints } =
+      let { finalRate, BasePoints, LockPeriods, finalPoints, InterestRate } =
         contextDetails["LockRateDetails"][LineId];
       BasePoints = cleanValue(BasePoints);
       finalPoints = cleanValue(finalPoints);
 
       if (action === "SelectAndLock") {
         handleLockRate_DB(
-          finalRate,
+          InterestRate, //finalRate,
           BasePoints,
           LockPeriods,
           finalPoints,
@@ -725,7 +735,7 @@ const LoanProductTable = (props) => {
         );
       } else if (action === "Select") {
         handleRateLockOption_SelectOnly(
-          finalRate,
+          InterestRate, //finalRate,
           BasePoints,
           LockPeriods,
           finalPoints,
@@ -1414,14 +1424,12 @@ const LoanProductTable = (props) => {
     let { LoanProgId, Name } = LoanProducts.filter(
       (e) => e["LineId"] == LineId && e["Id"] != -1
     )[0];
-
-  if (contextDetails["NoRateBandAvail"]) {
+    if (contextDetails["NoRateBandAvail"]) {
       BaseRate=0;
       BasePoints=0;
       ParPeriod=0;
       FinalPoints=0;
   }
-
     let obj = {
       LineID: LineId,
       EmpNum,
@@ -1429,6 +1437,7 @@ const LoanProductTable = (props) => {
       BasePoints,
       ParPeriod,
       LoanId,
+
       RateSheetId,
       LockType,
       SessionID: SessionId,
@@ -1531,6 +1540,7 @@ const LoanProductTable = (props) => {
                   },
                 ]}
                 onPress={() => {
+                  window.parent.GetLoanPulse();
                   setOpen(false);
                 }}
               />
@@ -1900,7 +1910,7 @@ const LoanProductTable = (props) => {
               styles["header"],
               styles.bodyText,
               {
-                backgroundColor: "#0d6ac5",
+                backgroundColor: "#508BC9",
                 justifyContent: "space-between",
                 paddingVertical: 5,
                 // height: 35,
@@ -1908,56 +1918,88 @@ const LoanProductTable = (props) => {
               },
             ]}
           >
-            <View style={[styles["header"], { backgroundColor: "#0d6ac5" }]}>
-              <CustomText style={{ color: "#fff", fontSize: 22 }} bold={true}>
+            <View
+              style={[
+                styles["header"],
+                { backgroundColor: "#508BC9", alignItems: "center" },
+              ]}
+            >
+              <CustomText style={{ color: "#fff", fontSize: 14 }}>
                 Loan Products:{" "}
               </CustomText>
               <CustomText
                 style={{
                   color: "#fff",
-                  backgroundColor: "#3a87ad",
-                  borderRadius: 3,
-                  fontSize: 12,
-                  paddingHorizontal: 5,
-                  paddingVertical: 2,
+                  fontSize: 11,
                   alignText: "center",
-                  top: 4,
-                  height: 20,
                 }}
               >
                 {LoanProducts?.length / 2} Loan Products
               </CustomText>
+              {contextDetails["IsWorseCase"] && (
+                <View
+                  style={[
+                    {
+                      alignItems: "center",
+                      //paddingTop: 5,
+                      alignItems: "baseline",
+                    },
+                  ]}
+                >
+                  <>
+                    <CustomText
+                      style={{
+                        fontSize: 12,
+                        color: "#fff",
+                        backgroundColor: "#C14242",
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                        borderRadius: 3,
+                        // marginBottom: 5,
+                        marginLeft: 20,
+                      }}
+                    >
+                      {`Due to a previous rate lock, worse case pricing applies.`}
+                    </CustomText>
+                  </>
+                </View>
+              )}
             </View>
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 7 }}
             >
-              <CustomText style={{ color: "#fff" }}>
-                Display Lender Comp?{" "}
+              <CustomText style={{ color: "#fff", fontSize: 13 }}>
+                Display Lender Comp{" "}
               </CustomText>
-              <Swatch
+              <SwatchOutlined
                 size={15}
                 value={LenderComp}
                 onChange={() => {
                   handleLenderComp(!LenderComp);
                 }}
-              ></Swatch>
+              ></SwatchOutlined>
             </View>
           </View>
-          <View style={[styles["header"], { color: "#fff" }]}>
+          <View
+            style={[
+              styles["header"],
+              { color: "#fff", borderBottomWidth: 1, borderColor: "#999999" },
+            ]}
+          >
             <CustomText
               style={[
                 styles.bodyText,
                 styles.colBorder,
-                { color: "#fff", width: "35%" }, //flex: 4
+                { color: "#333333", width: "35%", fontWeight: 600 }, //flex: 4
               ]}
             >
-              Product
+              Loan Product
             </CustomText>
             <CustomText
               style={[
                 styles.bodyText,
                 styles.colBorder,
-                { color: "#fff", width: "10%" }, //flex: 1
+                { color: "#333333", width: "10%", fontWeight: 600 }, //flex: 1
               ]}
             >
               Interest Rate
@@ -1966,7 +2008,7 @@ const LoanProductTable = (props) => {
               style={[
                 styles.bodyText,
                 styles.colBorder,
-                { color: "#fff", width: "10%" }, // flex: 1
+                { color: "#333333", width: "10%", fontWeight: 600 }, // flex: 1
               ]}
             >
               APR
@@ -1975,16 +2017,7 @@ const LoanProductTable = (props) => {
               style={[
                 styles.bodyText,
                 styles.colBorder,
-                { color: "#fff", width: "10%" }, // flex: 1
-              ]}
-            >
-              Lock Days
-            </CustomText>
-            <CustomText
-              style={[
-                styles.bodyText,
-                styles.colBorder,
-                { color: "#fff", width: "10%" }, // flex: 1
+                { color: "#333333", width: "10%", fontWeight: 600 }, // flex: 1
               ]}
             >
               Monthly Payment
@@ -1993,379 +2026,397 @@ const LoanProductTable = (props) => {
               style={[
                 styles.bodyText,
                 styles.colBorder,
-                { color: "#fff", width: "15%" }, // flex: 2
+                { color: "#333333", width: "10%", fontWeight: 600 }, // flex: 1
               ]}
             >
-              Credit/Charge for Interest Rate Chosen
+              Lock Days
+            </CustomText>
+
+            <CustomText
+              style={[
+                styles.bodyText,
+                styles.colBorder,
+                { color: "#333333", width: "15%", fontWeight: 600 }, // flex: 2
+              ]}
+            >
+              Credit/Charge to Borrower
             </CustomText>
             <CustomText
               style={[
                 styles.bodyText,
-                { color: "#fff", width: "10%" }, //flex: 1, maxWidth: 80
+                { color: "#333333", width: "10%", fontWeight: 600 }, //flex: 1, maxWidth: 80
               ]}
             >
-              Action
+              Lock Rate
             </CustomText>
           </View>
-          {LoanProducts?.map((row, index) => {
-            return (
-              <Fragment key={index}>
-                {row["Id"] != -1 ? (
-                  <View
-                    style={[
-                      styles.body,
-                      {
-                        backgroundColor: row.isEven ? "#deebf7" : "#fff",
-                        // flex: 8,
-                      },
-                    ]}
-                  >
+          <View
+            style={{ borderBottomEndRadius: 10, borderBottomStartRadius: 10 }}
+          >
+            {LoanProducts?.map((row, index) => {
+              return (
+                <Fragment key={index}>
+                  {row["Id"] != -1 ? (
                     <View
                       style={[
-                        styles.bodyText,
+                        styles.body,
                         {
-                          width: "35%",
-                          justifyContent: "center",
-                          maxWidth: "100%",
+                          backgroundColor: VisibleRateBand[row["LineId"]]
+                            ? "#DEEAF1"
+                            : row.isEven
+                            ? "#fff"
+                            : "#F2F2F2",
+                          // flex: 8,
                         },
                       ]}
                     >
-                      <View style={{ flexDirection: "column" }}>
-                        <View
-                          style={{
+                      <View
+                        style={[
+                          styles.bodyText,
+                          {
+                            width: "35%",
+                            maxWidth: "100%",
                             flexDirection: "row",
-                            alignItems: "center",
-                          }}
-                        >
-                          <CustomText
-                            style={[styles.bodyText, styles.removeColBorder]}
-                            onPress={(e) => {
-                              ProductClick({
-                                LineId: row["LineId"],
-                                index,
-                                LineIds: row["LineIds"],
-                                CommonId: row["LPA_CommonData"],
-                                InterestRate: row["InterestRate"],
-                                [row["LineId"]]: {
-                                  LockPeriodId: row["LockPeriodID"],
-                                },
-                                LnProgActiveId: row["LnProgActiveId"],
-                              });
+                            gap: 10,
+                          },
+                        ]}
+                      >
+                        <View>
+                          <Image
+                            style={{
+                              height: 26,
+                              width: 21,
+                              top: 6,
+                            }}
+                            resizeMode="contain"
+                            source={require(`../../assets/${
+                              row["Accept"] == 1 ? "AcceptRefer" : "CancelRefer"
+                            }.svg`)}
+                            onClick={() => {
+                              handleAdjustmentDetails(false, "");
+                            }}
+                          />{" "}
+                        </View>
+                        <View style={{ flexDirection: "column" }}>
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
                             }}
                           >
-                            {row["CommonName"]}
-                          </CustomText>
+                            <CustomText
+                              style={[styles.bodyText, styles.removeColBorder]}
+                              onPress={(e) => {
+                                ProductClick({
+                                  LineId: row["LineId"],
+                                  index,
+                                  LineIds: row["LineIds"],
+                                  CommonId: row["LPA_CommonData"],
+                                  InterestRate: row["InterestRate"],
+                                  [row["LineId"]]: {
+                                    LockPeriodId: row["LockPeriodID"],
+                                  },
+                                  LnProgActiveId: row["LnProgActiveId"],
+                                });
+                              }}
+                            >
+                              {row["CommonName"]}
+                            </CustomText>
+                          </View>
+                          {row["showInfoInHeader"] && (
+                            <View
+                              style={[
+                                {
+                                  alignItems: "center",
+                                  paddingTop: 5,
+                                  gap: 5,
+                                  alignItems: "baseline",
+                                },
+                              ]}
+                            >
+                              <>
+                                {row["Accept"] == 1 ? (
+                                  <CustomText
+                                    style={{
+                                      fontSize: 12,
+                                      color: "#246C23",
+                                      paddingVertical: 2,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {"Accept"}
+                                  </CustomText>
+                                ) : (
+                                  <View style={{ flexDirection: "row" }}>
+                                    <CustomText
+                                      style={{
+                                        color: "#C14242",
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                      }}
+                                    >
+                                      {"Refer: "}
+                                    </CustomText>
+                                    <CustomText
+                                      style={{ fontSize: 12, color: "#C14242" }}
+                                    >
+                                      {row["Reason"]}
+                                    </CustomText>
+                                  </View>
+                                )}
+                                {row["ProgWarnMsg"].length > 5 && (
+                                  <CustomText
+                                    style={{
+                                      fontSize: 12,
+                                      color: "white",
+                                      backgroundColor: "#f89406",
+                                      paddingHorizontal: 6,
+                                      paddingVertical: 2,
+                                      borderRadius: 6,
+                                      marginBottom: 5,
+                                      marginRight: 3,
+                                    }}
+                                  >
+                                    {row["ProgWarnMsg"]}
+                                  </CustomText>
+                                )}
+                              </>
+                            </View>
+                          )}
                         </View>
-                        {row["showInfoInHeader"] && (
-                          <View
-                            style={[
-                              {
-                                alignItems: "center",
-                                paddingTop: 5,
-                                gap: 5,
-                                alignItems: "baseline",
-                              },
-                            ]}
-                          >
-                            <>
+                      </View>
+
+                      <CustomText
+                        style={[styles.bodyText, { width: "10%", top: 4 }]}
+                        onPress={(e) => {
+                          ProductClick({
+                            LineId: row["LineId"],
+                            index,
+                            LineIds: row["LineIds"],
+                            CommonId: row["LPA_CommonData"],
+                            InterestRate: row["InterestRate"], //row["InterestRate"]
+                            [row["LineId"]]: {
+                              LockPeriodId: row["LockPeriodID"],
+                            },
+                            LnProgActiveId: row["LnProgActiveId"],
+                          });
+                        }}
+                      >
+                        {row["iInterestRate"]} {/*row["iInterestRate"] */}
+                      </CustomText>
+                      <CustomText
+                        style={[styles.bodyText, { width: "10%", top: 4 }]}
+                        onPress={(e) => {
+                          ProductClick({
+                            LineId: row["LineId"],
+                            index,
+                            LineIds: row["LineIds"],
+                            CommonId: row["LPA_CommonData"],
+                            InterestRate: row["InterestRate"],
+                            [row["LineId"]]: {
+                              LockPeriodId: row["LockPeriodID"] || 4,
+                            },
+                            LnProgActiveId: row["LnProgActiveId"],
+                          });
+                        }}
+                      >
+                        {row["APR"]}
+                      </CustomText>
+                      <View
+                        style={[
+                          styles.bodyText,
+                          {
+                            width: "10%",
+                            top: 4,
+                            flexDirection: "column",
+                            flexWrap: isMobileWeb ? "column" : "wrap",
+                            // flexWrap: "column",
+
+                            gap: 5,
+                          },
+                        ]}
+                      >
+                        <CustomText style={{ fontSize: 12, color: "#6c757d" }}>
+                          {formatCurrency(row["Payment"])}
+                        </CustomText>
+                        <View>
+                          <Button
+                            title={
+                              <CustomText
+                                style={{
+                                  fontSize: 11,
+                                  color: "#fff",
+                                  fontWeight: 200,
+                                }}
+                              >
+                                View PITI
+                              </CustomText>
+                            }
+                            style={{
+                              paddingHorizontal: 8,
+                              paddingVertical: 3,
+                              marginLeft: 0,
+                              fontSize: 10,
+                              // left: 30,
+                              width: "fit-content",
+                              bottom: 4,
+                              backgroundColor: "#428bca",
+                            }}
+                            onPress={() => {
+                              handleViewPITI(true, row);
+                            }}
+                          />
+                        </View>
+                      </View>
+                      <CustomText
+                        style={[styles.bodyText, { width: "10%", top: 4 }]}
+                        onPress={(e) => {
+                          ProductClick({
+                            LineId: row["LineId"],
+                            index,
+                            LineIds: row["LineIds"],
+                            CommonId: row["LPA_CommonData"],
+                            InterestRate: row["InterestRate"],
+                            [row["LineId"]]: {
+                              LockPeriodId: row["LockPeriodID"] || 4,
+                            },
+                            LnProgActiveId: row["LnProgActiveId"],
+                          });
+                        }}
+                      >
+                        {row["LockPeriodDesc"].split("Days")[0]}
+                      </CustomText>
+
+                      <CustomText
+                        style={[
+                          styles.bodyText,
+                          {
+                            width: "15%",
+                            top: 4,
+                            color:
+                              row["RateChosen"].indexOf("Credit") != -1
+                                ? "green"
+                                : "red",
+                          },
+                        ]}
+                        onPress={(e) => {
+                          ProductClick({
+                            LineId: row["LineId"],
+                            index,
+                            LineIds: row["LineIds"],
+                            CommonId: row["LPA_CommonData"],
+                            InterestRate: row["InterestRate"],
+                            [row["LineId"]]: {
+                              LockPeriodId: row["LockPeriodID"] || 4,
+                            },
+                            LnProgActiveId: row["LnProgActiveId"],
+                          });
+                        }}
+                      >
+                        {row["RateChosen"] || ""}
+                      </CustomText>
+                      <CustomText
+                        style={[
+                          styles.bodyText,
+                          {
+                            width: "10%",
+                            right: 0,
+                            bottom: 3,
+                            top: 0,
+                            display: isMobileWeb ? "flex" : "block",
+                            flexDirection: isMobileWeb ? "column" : "row",
+                          },
+                        ]}
+                      >
+                        {(//VisibleRateBand[row["LineId"]] && !contextDetails["NoRateBandAvail"] &&
+                          //!ActiveRate[ActiveRate?.[row?.["LPA_CommonData"]]?.["LineId"]]?.["IsDummy"]) || "" 
+                        !contextDetails["NoRateBandAvail"] || contextDetails["NoRateBandAvail"])
+                          ? (
+                          <Button
+                            title={
                               <CustomText
                                 style={{
                                   fontSize: 12,
                                   color: "white",
-                                  backgroundColor:
-                                    row["Accept"] == 1 ? "#468847" : "#d15b47",
-                                  paddingHorizontal: 6,
-                                  paddingVertical: 2,
-                                  borderRadius: 6,
-                                  // marginBottom: 5,
-                                  marginRight: 3,
+                                  fontWeight: 200,
                                 }}
                               >
-                                {row["Accept"] == 1
-                                  ? "Accept"
-                                  : `Refer Reasons: ${row["Reason"]}`}
+                                Lock/Float
                               </CustomText>
-                              {row["ProgWarnMsg"].length > 5 && (
-                                <CustomText
-                                  style={{
-                                    fontSize: 12,
-                                    color: "white",
-                                    backgroundColor: "#f89406",
-                                    paddingHorizontal: 6,
-                                    paddingVertical: 2,
-                                    borderRadius: 6,
-                                    marginBottom: 5,
-                                    marginRight: 3,
-                                  }}
-                                >
-                                  {row["ProgWarnMsg"]}
-                                </CustomText>
-                              )}
-                            </>
-                          </View>
-                        )}
-                        {row["IsWorseCase"] && (
-                          <View
-                            style={[
-                              {
-                                alignItems: "center",
-                                paddingTop: 5,
-                                alignItems: "baseline",
-                              },
-                            ]}
-                          >
-                            <>
-                              <CustomText
-                                style={{
-                                  fontSize: 12,
-                                  color: "#000",
-                                  backgroundColor: "yellow",
-                                  paddingHorizontal: 6,
-                                  paddingVertical: 2,
-                                  borderRadius: 6,
-                                  // marginBottom: 5,
-                                  marginRight: 3,
-                                }}
-                              >
-                                {`This Loan Program is subject to worse case Rate Sheet ID: ${
-                                  contextDetails?.["ActiveLineId"]?.[
-                                    row["LPA_CommonData"]
-                                  ]?.["RateSheetName"] || ""
-                                }`}
-                              </CustomText>
-                            </>
-                          </View>
-                        )}
-                      </View>
-                    </View>
-
-                    <CustomText
-                      style={[styles.bodyText, { width: "10%", top: 4 }]}
-                      onPress={(e) => {
-                        ProductClick({
-                          LineId: row["LineId"],
-                          index,
-                          LineIds: row["LineIds"],
-                          CommonId: row["LPA_CommonData"],
-                          InterestRate: row["InterestRate"],
-                          [row["LineId"]]: {
-                            LockPeriodId: row["LockPeriodID"],
-                          },
-                          LnProgActiveId: row["LnProgActiveId"],
-                        });
-                      }}
-                    >
-                      {row["InterestRate"]}
-                    </CustomText>
-                    <CustomText
-                      style={[styles.bodyText, { width: "10%", top: 4 }]}
-                      onPress={(e) => {
-                        ProductClick({
-                          LineId: row["LineId"],
-                          index,
-                          LineIds: row["LineIds"],
-                          CommonId: row["LPA_CommonData"],
-                          InterestRate: row["InterestRate"],
-                          [row["LineId"]]: {
-                            LockPeriodId: row["LockPeriodID"] || 4,
-                          },
-                          LnProgActiveId: row["LnProgActiveId"],
-                        });
-                      }}
-                    >
-                      {row["APR"]}
-                    </CustomText>
-                    <CustomText
-                      style={[styles.bodyText, { width: "10%", top: 4 }]}
-                      onPress={(e) => {
-                        ProductClick({
-                          LineId: row["LineId"],
-                          index,
-                          LineIds: row["LineIds"],
-                          CommonId: row["LPA_CommonData"],
-                          InterestRate: row["InterestRate"],
-                          [row["LineId"]]: {
-                            LockPeriodId: row["LockPeriodID"] || 4,
-                          },
-                          LnProgActiveId: row["LnProgActiveId"],
-                        });
-                      }}
-                    >
-                      {row["LockPeriodDesc"]}
-                    </CustomText>
-                    <View
-                      style={[
-                        styles.bodyText,
-                        {
-                          width: "10%",
-                          top: 4,
-                          flexDirection: "column",
-                          flexWrap: isMobileWeb ? "column" : "wrap",
-                          // flexWrap: "column",
-
-                          gap: 5,
-                        },
-                      ]}
-                    >
-                      <CustomText style={{ fontSize: 12, color: "#6c757d" }}>
-                        {formatCurrency(row["Payment"])}
+                            }
+                            style={{
+                              paddingHorizontal: 15,
+                              paddingVertical: 8,
+                              marginLeft: 0,
+                              //borderRadius: 6,
+                              borderWidth: 1,
+                              borderColor: "#295B9A",
+                            }}
+                            onPress={() => {
+                              handleLockRate(
+                                row,
+                                "Modal",
+                                "Parent",
+                                row["LineId"]
+                              );
+                            }}
+                          />
+                        ) : null}
                       </CustomText>
-                      <View>
-                        <Button
-                          title={
-                            <CustomText
-                              style={{
-                                fontSize: 11,
-                                color: "#fff",
-                                fontWeight: 200,
-                              }}
-                            >
-                              View PITI
-                            </CustomText>
+                    </View>
+                  ) : VisibleRateBand[row["LineId"]] ? (
+                    <View
+                      style={
+                        VisibleRateBand[row["LineId"]]
+                          ? styles["showRateBand"]
+                          : styles["hideRateBand"]
+                      }
+                    >
+                      <View
+                        style={[
+                          {
+                            display: VisibleRateBand[row["LineId"]]
+                              ? "flex"
+                              : "none",
+                            backgroundColor: "#F2F2F2",
+                            borderRightWidth: 1,
+                            borderRightColor: "#5e9cd3",
+                            borderRightStyle: "dotted",
+                          },
+                        ]}
+                      >
+                        <RateBandTable
+                          RateBandClick={RateBandClick}
+                          ActiveRate={ActiveRate}
+                          RawRateBand={RawRateBand[row["LPA_CommonData"]] || []}
+                          LineId={row["LineId"]}
+                          LnProgActiveId={row["LnProgActiveId"]}
+                          LineIds={
+                            RawRateBand[row["LPA_CommonData"]][
+                              "LineIds"
+                            ]?.split(",") || []
                           }
-                          style={{
-                            paddingHorizontal: 8,
-                            paddingVertical: 3,
-                            marginLeft: 0,
-                            fontSize: 10,
-                            // left: 30,
-                            width: "fit-content",
-                            bottom: 4,
-                            backgroundColor: "#428bca",
-                          }}
-                          onPress={() => {
-                            handleViewPITI(true, row);
-                          }}
+                          CommonId={row["LPA_CommonData"]}
+                          LockPeriodChange={LockPeriodChange}
+                          RankByChange={RankByChange}
+                          AdjustmentDetails={handleAdjustmentDetails}
+                          LenderRank={handleLenderRank}
+                          //RankCheckBox={handleLenderRank}
+                          CheckBoxVal={Open}
+                          // LockRateModal={handleLockRateModal}
+                          handleLockRate={handleLockRate}
+                          handleRunAUS={handleRunAUS}
+                          handleProgramGuidelines={handleProgramGuidelines}
                         />
                       </View>
                     </View>
-
-                    <CustomText
-                      style={[
-                        styles.bodyText,
-                        {
-                          width: "15%",
-                          top: 4,
-                          color:
-                            row["RateChosen"].indexOf("Credit") != -1
-                              ? "green"
-                              : "red",
-                        },
-                      ]}
-                      onPress={(e) => {
-                        ProductClick({
-                          LineId: row["LineId"],
-                          index,
-                          LineIds: row["LineIds"],
-                          CommonId: row["LPA_CommonData"],
-                          InterestRate: row["InterestRate"],
-                          [row["LineId"]]: {
-                            LockPeriodId: row["LockPeriodID"] || 4,
-                          },
-                          LnProgActiveId: row["LnProgActiveId"],
-                        });
-                      }}
-                    >
-                      {row["RateChosen"] || ""}
-                    </CustomText>
-                    <CustomText
-                      style={[
-                        styles.bodyText,
-                        {
-                          width: "10%",
-                          right: 0,
-                          bottom: 3,
-                          top: 0,
-                          display: isMobileWeb ? "flex" : "block",
-                          flexDirection: isMobileWeb ? "column" : "row",
-                        },
-                      ]}
-                    >
-                      {(!contextDetails["NoRateBandAvail"] || contextDetails["NoRateBandAvail"] //&&
-                        //!ActiveRate[ActiveRate?.[row?.["LPA_CommonData"]]?.["LineId"]]?.["IsDummy"] 
-                      ) //|| "" 
-                        ? (
-                        <Button
-                          title={
-                            <CustomText
-                              style={{
-                                fontSize: 12,
-                                color: "white",
-                                fontWeight: 200,
-                              }}
-                            >
-                              Lock | Float Rate
-                            </CustomText>
-                          }
-                          style={{
-                            paddingHorizontal: 7,
-                            paddingVertical: 7,
-                            marginLeft: 0,
-                          }}
-                          onPress={() => {
-                            handleLockRate(
-                              row,
-                              "Modal",
-                              "Parent",
-                              row["LineId"]
-                            );
-                          }}
-                        />
-                      ) : null}
-                    </CustomText>
-                  </View>
-                ) : VisibleRateBand[row["LineId"]] ? (
-                  <View
-                    style={
-                      VisibleRateBand[row["LineId"]]
-                        ? styles["showRateBand"]
-                        : styles["hideRateBand"]
-                    }
-                  >
-                    <View
-                      style={[
-                        {
-                          display: VisibleRateBand[row["LineId"]]
-                            ? "flex"
-                            : "none",
-                          backgroundColor: "#F2F2F2",
-                          borderRightWidth: 1,
-                          borderRightColor: "#5e9cd3",
-                          borderRightStyle: "dotted",
-                        },
-                      ]}
-                    >
-                      <RateBandTable
-                        RateBandClick={RateBandClick}
-                        ActiveRate={ActiveRate}
-                        RawRateBand={RawRateBand[row["LPA_CommonData"]] || []}
-                        LineId={row["LineId"]}
-                        LnProgActiveId={row["LnProgActiveId"]}
-                        LineIds={
-                          RawRateBand[row["LPA_CommonData"]]["LineIds"]?.split(
-                            ","
-                          ) || []
-                        }
-                        CommonId={row["LPA_CommonData"]}
-                        LockPeriodChange={LockPeriodChange}
-                        RankByChange={RankByChange}
-                        AdjustmentDetails={handleAdjustmentDetails}
-                        LenderRank={handleLenderRank}
-                        //RankCheckBox={handleLenderRank}
-                        CheckBoxVal={Open}
-                        // LockRateModal={handleLockRateModal}
-                        handleLockRate={handleLockRate}
-                        handleRunAUS={handleRunAUS}
-                        handleProgramGuidelines={handleProgramGuidelines}
-                      />
-                    </View>
-                  </View>
-                ) : (
-                  <></>
-                )}
-              </Fragment>
-            );
-          })}
+                  ) : (
+                    <></>
+                  )}
+                </Fragment>
+              );
+            })}
+          </View>
         </View>
       ) : (
         contextDetails["currentProcess"] === "ProductSearch" && (
@@ -2385,7 +2436,7 @@ const LoanProductTable = (props) => {
           />
         )}
         {Open["Adjustments"] &&
-          ([32179, 2099,26945].includes(Number(contextDetails["EmpNum"])) ? (
+          ([32179, 2099, 26945].includes(Number(contextDetails["EmpNum"])) ? (
             <>
               <AdjustmentDetailsNew
                 Open={Open}
@@ -2449,13 +2500,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 17,
   },
   table: {
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: "#5e9cd3",
     borderStyle: "solid",
     borderRightWidth: 0,
+    borderRadius: 10,
+    overflow: "hidden",
+    boxShadow: "rgba(0, 0, 0, 0.25) 0px 6px 20px",
   },
   header: {
-    backgroundColor: "#5e9cd3",
+    backgroundColor: "#F2F2F2",
     flexDirection: "row",
   },
   headerText: {
@@ -2475,10 +2529,10 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
     width: "100%",
-    borderRightWidth: 1,
+    borderRightWidth: 0,
     borderRightColor: "#5e9cd3",
     borderRightStyle: "dotted",
-    color: "#6c757d",
+    color: "#000000",
     fontSize: 12,
   },
   icon: {

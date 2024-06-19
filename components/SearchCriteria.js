@@ -132,7 +132,7 @@ const SearchCriteria = ({
     TBD: "0",
     ddlRateMethod: 1,
     "Rent Ratio": "$0.00",
-    "DTI": "0.00%"
+    "Debt to Income Ratio %": "0.00%"
   });
 
   const topMenuUseref = useRef();
@@ -415,7 +415,7 @@ const SearchCriteria = ({
             "Lenders to Search": LendersToSearch,
             TBD: TBD,
             "MI Type": MortInsPremium || 0,
-            "DTI": DTI,
+            "Debt to Income Ratio %": formatPercentage(DTI,2),
             "Mortgage Insurance Type": MortInsPremium || 0,
           };
         });
@@ -1273,7 +1273,6 @@ const SearchCriteria = ({
       {
         columnName: "Property Type",
         columnValue: " ",
-
         Option: TypeOption["PropertyType"],
         type: "dropDown",
       },
@@ -1288,8 +1287,13 @@ const SearchCriteria = ({
       {
         columnName: "State",
         columnValue: " ",
-
         Option: TypeOption["State"],
+        type: "dropDown",
+      },
+      {
+        columnName: "Self Employed",
+        columnValue: " ",
+        Option: TypeOption["YesorNo"],
         type: "dropDown",
       },
       {
@@ -1299,22 +1303,17 @@ const SearchCriteria = ({
         type: "input",
       },
       {
-        columnName: "Self Employed",
-        columnValue: " ",
-        Option: TypeOption["YesorNo"],
-        type: "dropDown",
-      },
-      {
         columnName: "Liabilities ($)",
         columnValue: " ",
         dataType: "Currency",
         type: "input",
       },
       {
-        columnName: "DTI",
+        columnName: "Debt to Income Ratio %",
         columnValue: " ",
         dataType: "Percentage",
         type: "input",
+        name: "DTI",
       }
     ];
     const TermsOptions = [
@@ -1323,7 +1322,6 @@ const SearchCriteria = ({
         columnValue: "",
         type: "header",
       },
-
       {
         columnName: "Amortization Type",
         columnValue: " ",
@@ -2779,7 +2777,7 @@ const SearchCriteria = ({
                 CorresLoan: "0", // *
                 CorrespondLoanType: "0",
                 IsSelfEmployed: searchDetails["Self Employed"] || "0",
-                DTI: searchDetails["DTI"] || "0"
+                DTI: searchDetails["Debt to Income Ratio %"] || "0"
               },
             ],
           },

@@ -190,13 +190,17 @@ const LockConfirmation = (props) => {
       try {
         handleProdLoading(); // for production alone
         response = JSON.parse(response)["DataOut"];
+        //console.log("locked");
+        //console.log(response);
         // let addons = response?.[2]?.["Addons"];
         // setAddons(addons);
         if (Object.keys(response?.[2]).length != 0) {
           setLockedInfo(response);
         }
+
         if (Object.keys(response?.[2]).length == 0 && Polling < 4) {
           Polling = Polling + 1;
+          setTimeout(() => {
           handleDoLockRateProcess(
             0,
             EmpNum,
@@ -213,6 +217,7 @@ const LockConfirmation = (props) => {
             0, //pageload
             Polling
           );
+          },500);
         } else if (Polling > 4) {
           console.log("Polling count ==>", Polling);
         } else {
@@ -228,69 +233,44 @@ const LockConfirmation = (props) => {
             ClosingDocsSent,
             lockaccess,
           } = response?.[1]?.["LockConfObjects"]?.[0];
-          let showLockExtend = 0,
-            showLockbtn = 0,
-            showChangeRate = 0,
-            showCancelLock = 0,
-            showFloatDown_ = 0,
-            showRelock = 0;
-          if (
-            showchangeintrate == "1" &&
-            (allowlockstatus == "1" || allowlockstatus == "0") &&
-            funded == "0" &&
-            settled == "0" &&
-            withdrawn == 0
-          )
+          
+          let showLockExtend = 0, showLockbtn = 0, showChangeRate = 0, showCancelLock = 0, showFloatDown_ = 0, 
+          showRelock = 0;
+          
+          if (showchangeintrate == "1" && (allowlockstatus == "1" || allowlockstatus == "0") &&
+              funded == "0" && settled == "0" && withdrawn == 0)
             showLockExtend = 1;
-          if (showrelock == "1" && settled == "0" && finaluw == "1")
-            showLockbtn = 1;
-
-          if (
-            showchangeintrate == "1" &&
-            funded == "0" &&
-            settled == "0" &&
-            finaluw == "0"
-          )
-            showChangeRate = 1;
+          if (showrelock == "1" && settled == "0" && finaluw == "1") showLockbtn = 1;
+          if (showchangeintrate == "1" && funded == "0" && settled == "0" && finaluw == "0") showChangeRate = 1;
           if (funded == "0" && settled == "0") showCancelLock = 1;
-          if (
-            showchangeintrate == "1" &&
-            (allowlockstatus == "1" || allowlockstatus == "0") &&
-            funded == "0" &&
-            settled == "0" &&
-            withdrawn == "0" &&
-            closed == "0"
-          )
+          if (showchangeintrate == "1" && (allowlockstatus == "1" || allowlockstatus == "0") &&
+              funded == "0" && settled == "0" && withdrawn == "0" && closed == "0")
             showFloatDown_ = 1;
-
-          if (
-            showchangeintrate == "0" &&
-            lockaccess == "1" &&
-            funded == "0" &&
-            settled == "0" &&
-            ClosingDocsSent == "0" &&
-            withdrawn == 0
-          )
+          if (showchangeintrate == "0" && lockaccess == "1" && funded == "0" && settled == "0" && 
+              ClosingDocsSent == "0" && withdrawn == 0)
             showRelock = 1;
-          // Passing the details to Lock Confirmation page
-          let existingInfo = JSON.parse(
-            localStorage.getItem("LoanSelectioInfo") || "{}"
-          );
+          
+            // Passing the details to Lock Confirmation page
+          let existingInfo = JSON.parse(localStorage.getItem("LoanSelectioInfo") || "{}");
 
-          if (
-            existingInfo[LoanId] &&
-            Object.keys(existingInfo[LoanId]).length > 0
-          ) {
+          if (existingInfo[LoanId] && Object.keys(existingInfo[LoanId]).length > 0 && Object.keys(response?.[2]).length == 0) {
             delete response?.[1]?.["LockConfObjects"]?.[0]["comppointsreq"];
             delete response?.[1]?.["LockConfObjects"]?.[0]["RateChosenPoint"];
             delete response?.[1]?.["LockConfObjects"]?.[0]["comppointsadj"];
             delete response?.[1]?.["LockConfObjects"]?.[0]["RateChosenPoint"];
             delete response?.[1]?.["LockConfObjects"]?.[0]["comppointsadj"];
             delete response?.[1]?.["LockConfObjects"]?.[0]["compamtadj"];
-          } else {
+          } 
+          // else {
+          //   let addons = response?.[2]?.["Addons"];
+          //   setAddons(addons);
+          // }
+
+          if (Object.keys(response?.[2]).length > 0) {
             let addons = response?.[2]?.["Addons"];
             setAddons(addons);
           }
+
           setLockDetails((preLockDetails) => {
             return {
               ...preLockDetails,
@@ -312,16 +292,13 @@ const LockConfirmation = (props) => {
           //   "SupervisorEdit"
           // );
           // Passing the details to Lock Confirmation page
-          let json = {
-            ...existingInfo,
-            [LoanId]: {},
-          };
+          let json = {...existingInfo, [LoanId]: {}};
           localStorage.setItem("LoanSelectioInfo", JSON.stringify(json));
         }
+
         /////////////////////////////// Needed Options ////////////////////////////
         if (CallingFrom == 1) handleOptions(response);
         /////////////////////////////// Needed Options ////////////////////////////
-
         console.log("DoLockRateProcess ===>", response);
       } catch (error) {
         console.log("DoLockRateProcess Error ==>", response);

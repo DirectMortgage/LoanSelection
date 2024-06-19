@@ -1414,6 +1414,14 @@ const LoanProductTable = (props) => {
     let { LoanProgId, Name } = LoanProducts.filter(
       (e) => e["LineId"] == LineId && e["Id"] != -1
     )[0];
+
+  if (contextDetails["NoRateBandAvail"]) {
+      BaseRate=0;
+      BasePoints=0;
+      ParPeriod=0;
+      FinalPoints=0;
+  }
+
     let obj = {
       LineID: LineId,
       EmpNum,
@@ -1421,7 +1429,6 @@ const LoanProductTable = (props) => {
       BasePoints,
       ParPeriod,
       LoanId,
-
       RateSheetId,
       LockType,
       SessionID: SessionId,
@@ -2274,11 +2281,10 @@ const LoanProductTable = (props) => {
                         },
                       ]}
                     >
-                      {(!contextDetails["NoRateBandAvail"] &&
-                        !ActiveRate[
-                          ActiveRate?.[row?.["LPA_CommonData"]]?.["LineId"]
-                        ]?.["IsDummy"]) ||
-                      "" ? (
+                      {(!contextDetails["NoRateBandAvail"] || contextDetails["NoRateBandAvail"] //&&
+                        //!ActiveRate[ActiveRate?.[row?.["LPA_CommonData"]]?.["LineId"]]?.["IsDummy"] 
+                      ) //|| "" 
+                        ? (
                         <Button
                           title={
                             <CustomText

@@ -795,7 +795,7 @@ const TableNew = (props) => {
                                             ? `${
                                                 searchDetails[row["columnName"]]
                                               }%`
-                                            : row["columnName"] === "CLTV"
+                                            : ["CLTV", 'DTI', 'Debt to Income Ratio %'].includes(row["columnName"])
                                             ? formatPercentage(
                                                 searchDetails[
                                                   row["columnName"]

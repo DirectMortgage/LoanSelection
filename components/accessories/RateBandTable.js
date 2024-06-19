@@ -60,13 +60,13 @@ const RateBandTable = (props) => {
   useEffect(() => {
     let column_ = {
       LineId: LineId,
-      IntRate: formatPercentage(ActiveRate[CommonId]["IntRate"] || ActiveRate["Row"]["IntRate"]),
+      IntRate: formatPercentage(
+        ActiveRate[CommonId]["IntRate"] || ActiveRate["Row"]["IntRate"]
+      ),
       LnProgActiveId: ActiveRate["Row"]["LnProgActiveId"],
     };
     fnAddons(column_, "No APR");
   }, [RateBandDetails]);
-
-
 
   let LockPeriodOptions = [];
   LockPeriod?.[LineId]?.forEach((item, index) => {
@@ -190,22 +190,21 @@ const RateBandTable = (props) => {
     let result = 0,
       sum = 0,
       formatType = 2;
-    BasePoints = parseFloat(cleanValue(BasePoints));
+    BasePoints = parseFloat(cleanValue(BasePoints, 4));
     if (LenderComp == "finalRate") {
-      const rates = Addons.map(
-        (e) => e["Rate"]
-      );
+      const rates = Addons.map((e) => e["Rate"]);
 
       result = rates.reduce(
-        (accumulator, currentRate) => accumulator + parseFloat(cleanValue(currentRate)),
+        (accumulator, currentRate) =>
+          accumulator + parseFloat(cleanValue(currentRate)),
         0
       );
-      result= BasePoints + result;
+      result = BasePoints + result;
       result = formatPercentage(result, digit);
     } else {
+
       Addons = parseFloat(cleanValue(Addons));
       LenderComp = parseFloat(cleanValue(LenderComp));
-      //if(contextDetails['UpdateLenderComp'] == 1)
       sum = BasePoints + Addons + LenderComp;
       if (["currency", "color"].includes(type)) {
         if (sum < 0) formatType = 1;
@@ -222,13 +221,16 @@ const RateBandTable = (props) => {
     return result;
   };
 
- 
   const handleLayout = () => {
     btnRefLock.current.measureLayout(
       scrollViewRef.current,
       (x, y, width, height) => {
-        const centerY = y - (scrollViewRef.current.clientHeight / 2) + (height / 2);
-        scrollViewRef.current.scrollTo({ y: centerY, animated: true,behavior: "smooth", });
+        const centerY = y - scrollViewRef.current.clientHeight / 2 + height / 2;
+        scrollViewRef.current.scrollTo({
+          y: centerY,
+          animated: true,
+          behavior: "smooth",
+        });
       },
       (error) => {
         console.error(error);
@@ -245,7 +247,6 @@ const RateBandTable = (props) => {
           marginVertical: 6,
           marginHorizontal: 9,
         }}
-      
         onLayout={handleLayout}
       >
         <View style={{ flexDirection: "row", gap: 7 }}>
@@ -257,7 +258,7 @@ const RateBandTable = (props) => {
               isValid={false}
               isMap={true}
               label={""}
-              KeyName={'LD'}
+              KeyName={"LD"}
               options={LockPeriodOptions}
               value={RateBandDetails["LockPeriodID"] || ""}
               onSelect={(text) => {
@@ -274,7 +275,7 @@ const RateBandTable = (props) => {
             <Dropdown
               //isValid={true}
               label={""}
-              KeyName={'RB'}
+              KeyName={"RB"}
               options={RankBy}
               value={RateBandDetails["RankBy"] || ""}
               onSelect={(text) => {
@@ -291,7 +292,6 @@ const RateBandTable = (props) => {
           maxWidth: "100%",
           overflowX: "scroll",
         }}
-       
       >
         {LineIds.map((e) => (
           <ScrollView
@@ -441,7 +441,14 @@ const RateBandTable = (props) => {
                 style={[
                   styles.heading,
                   styles["SpaceAround"],
-                  { flex: 6, paddingVertical: 5, paddingLeft: 0 ,position:'sticky',top:0,zIndex:999},
+                  {
+                    flex: 6,
+                    paddingVertical: 5,
+                    paddingLeft: 0,
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 999,
+                  },
                 ]}
               >
                 <CustomText bold={true} style={[styles.heading, { flex: 1 }]}>
@@ -562,7 +569,7 @@ const RateBandTable = (props) => {
                           </CustomText>
                           {ActiveRate?.[CommonId]?.["IntRate"] ==
                             column["IntRate"] &&
-                            contextDetails["wholeSaleRights"] != 0 &&
+                            //contextDetails["wholeSaleRights"] != 0 &&
                             !column["IsDummy"] && (
                               <Icon
                                 name="information-circle"
@@ -638,9 +645,7 @@ const RateBandTable = (props) => {
                             },
                           ]}
                         >
-                          {column["BaseAmt"].indexOf("-") != -1
-                            ? `(${column["BaseAmt"].replace("-", "")})`
-                            : column["IsDummy"]
+                          { column["IsDummy"]
                             ? "-"
                             : handlePricingCalc(
                                 column["BaseAmt"],
@@ -660,7 +665,7 @@ const RateBandTable = (props) => {
                           ActiveRate?.[CommonId]?.["LnProgActiveId"] ==
                             column?.["LnProgActiveId"] && (
                             <Button
-                            forwardedRef={btnRefLock}
+                              forwardedRef={btnRefLock}
                               title={
                                 <CustomText
                                   style={{

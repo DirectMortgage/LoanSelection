@@ -2436,19 +2436,20 @@ const LoanProductTable = (props) => {
           />
         )}
         {Open["Adjustments"] &&
-          ([32179, 2099, 26945].includes(Number(contextDetails["EmpNum"])) ? (
+          // ([32179, 2099, 26945].includes(Number(contextDetails["EmpNum"]) || true) ? (
             <>
               <AdjustmentDetailsNew
                 Open={Open}
                 handleAdjustmentDetails={handleAdjustmentDetails}
               />
             </>
-          ) : (
-            <AdjustmentDetails
-              Open={Open}
-              handleAdjustmentDetails={handleAdjustmentDetails}
-            />
-          ))}
+          // ) : (
+          //   <AdjustmentDetails
+          //     Open={Open}
+          //     handleAdjustmentDetails={handleAdjustmentDetails}
+          //   />
+          // ))
+        }
         {Open["LenderRank"] && (
           <LenderRank Open={Open} handleLenderRank={handleLenderRank} />
         )}

@@ -62,7 +62,7 @@ const handleAPI_ = async ({ name, params, method, requestOptions = null }) => {
 };
 
 function formatCurrency(value, flag, digit = 2) {
- /*
+  /*
  Flag = 1 => to have bracket around it
  flag = 2 => Use the same value without any additional modification
  flag = 0 => Use only int value
@@ -159,6 +159,13 @@ const cleanValue = (sVal, Flag) => {
         .replaceAll("$", "")
         .replaceAll("%", "")
         .replaceAll("(", "-")
+        .replaceAll(")", "");
+    else if (Flag === 4)
+      sVal = sVal
+        .replaceAll("$", "")
+        .replaceAll("%", "")
+        .replaceAll("(", "-")
+        .replaceAll(",", "")
         .replaceAll(")", "");
     else
       sVal = sVal.replaceAll("$", "").replaceAll(",", "").replaceAll("%", "");
@@ -324,8 +331,8 @@ const handleAddons = (Row, Addons) => {
     formatedAmt = `${formatedAmt}`;
   }
 
-  totalAddonsPoints = finalPoints|| 0;
-  totalAddonsAmount = finalAmount|| 0;
+  totalAddonsPoints = finalPoints || 0;
+  totalAddonsAmount = finalAmount || 0;
 
   finalPoints += parseFloat(formatedPoints);
   finalAmount += parseFloat(formatedAmt);
@@ -346,9 +353,9 @@ const handleAddons = (Row, Addons) => {
     finalPoints: finalPoints,
     finalAmount: finalAmount,
     RateChosen: finalAmount.indexOf("(") != -1 ? "Credit" : "Charge",
-    finalRate: formatPercentage(finalRate,4),
+    finalRate: formatPercentage(finalRate, 4),
     totalAddonsPoints,
-    totalAddonsAmount
+    totalAddonsAmount,
   };
   //RateBandClick(Row);
 

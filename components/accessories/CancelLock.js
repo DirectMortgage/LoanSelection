@@ -1,4 +1,4 @@
-import React, { useContext, useRef} from "react";
+import React, { useContext, useRef } from "react";
 import { View, Modal, StyleSheet } from "react-native";
 import { Button, InputBox } from "./CommomComponents";
 import CustomText from "./CustomText";
@@ -16,10 +16,10 @@ const CancelLock = ({
     if (event.keyCode === 32) {
       event.preventDefault(); // Prevent scrolling the page when space bar is pressed
       if (document.activeElement === btnRefCancelLock.current)
-      btnRefCancelLock.current.click();
-      }
+        btnRefCancelLock.current.click();
     }
-  
+  };
+
   return (
     <View style={styles.container} onKeyDown={handleKeyDown}>
       <Modal transparent={true} visible={LockDetails["cancelLockModal"]}>
@@ -69,7 +69,7 @@ const CancelLock = ({
                       height: 70,
                       fontWeight: 200,
                       fontSize: 11,
-                      color: "#646464"
+                      color: "#646464",
                     },
                   ]}
                   textAlignVertical="top"
@@ -105,7 +105,7 @@ const CancelLock = ({
                   </View>
                 )}
                 <Button
-                forwardedRef={btnRefCancelLock}
+                  forwardedRef={btnRefCancelLock}
                   title={
                     <CustomText
                       bold={false}

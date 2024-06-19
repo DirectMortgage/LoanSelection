@@ -105,7 +105,7 @@ const Dropdown_ = (props) => {
                 isValid && ["", 0, null, undefined, "0"].includes(value)
                   ? "red"
                   : "silver",
-              marginBottom: label !== "Loan Officer" ? 20 : 0,
+              marginBottom: label !== "Loan Officer" && !['LD','RB'].includes(KeyName) ? 20 : 0,
             },
           ]}
           ref={DropdownButton}

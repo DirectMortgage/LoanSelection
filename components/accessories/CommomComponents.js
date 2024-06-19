@@ -116,9 +116,10 @@ const Button = ({
   style = {},
   textStyle = {},
   isDisable = false,
-  forwardedRef
+  forwardedRef,testID=""
 }) => (
   <TouchableOpacity
+  testID={testID}
   ref={forwardedRef}
     activeOpacity={1}
     onPress={!isDisable ? onPress : ""}

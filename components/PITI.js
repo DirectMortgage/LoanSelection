@@ -13,6 +13,7 @@ import {
   formatCurrency,
   context,
 } from "./accessories/CommonFunctions";
+import ArrowSpinner from "./accessories/ArrowSpinner";
 
 const PITI = (prop) => {
   const { contextDetails, setContextDetails } = useContext(context); //Get value from context
@@ -77,7 +78,6 @@ const PITI = (prop) => {
               >
                 View PITI
               </CustomText>
-              
             </View>
 
             <View style={styles.container}>
@@ -160,42 +160,46 @@ const PITI = (prop) => {
                   });
                 }}
               ></InputBoxOrdinary>
-              <View style ={{flexDirection:'row',flexWrap:'wrap-reverse'}}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap-reverse" }}>
+                <InputBoxOrdinary
+                  label={"Mortgage Insurance"}
+                  name={"Insurance"}
+                  disabled={true}
+                  value={
+                    (Result?.["IsMIProcessing"] || 0) == 1
+                      ? "Loading..."
+                      : details["PropMI"]
+                  }
+                  width={"67%"}
+                ></InputBoxOrdinary>
 
-              <InputBoxOrdinary
-                label={"Mortgage Insurance"}
-                name={"Insurance"}
-                disabled={true}
-                value={details["PropMI"]}
-                width={'67%'}
-              ></InputBoxOrdinary>
-              <Button
-                title={
-                  <CustomText
-                    bold={false}
-                    style={{ fontSize: 10, color: "#fff", fontWeight: 200 }}
-                  >
-                    {"MI Quote"}
-                  </CustomText>
-                }
-                style={[
-                  styles["btn"],
-                  {
-                    paddingVertical: 10,
-                    borderWidth: 2,
-                    borderColor: "#428bca",
-                    marginTop:4
-                  },
-                ]}
-                onPress={() => {
-                  let url = `../../../BorrowerApplication/Presentation/Webforms/MIQuotes.aspx?SessionId=${contextDetails["queryString"]["SessionId"]}&LoanId=${contextDetails["LoanId"]}`;
-                  window.open(
-                    url,
-                    "MIQuotes",
-                    "width=1200,height=900,resizable=1,scrollbars=1"
-                  );
-                }}
-              />
+                <Button
+                  title={
+                    <CustomText
+                      bold={false}
+                      style={{ fontSize: 10, color: "#fff", fontWeight: 200 }}
+                    >
+                      {"MI Quote"}
+                    </CustomText>
+                  }
+                  style={[
+                    styles["btn"],
+                    {
+                      paddingVertical: 10,
+                      borderWidth: 2,
+                      borderColor: "#428bca",
+                      marginTop: 4,
+                    },
+                  ]}
+                  onPress={() => {
+                    let url = `../../../BorrowerApplication/Presentation/Webforms/MIQuotes.aspx?SessionId=${contextDetails["queryString"]["SessionId"]}&LoanId=${contextDetails["LoanId"]}`;
+                    window.open(
+                      url,
+                      "MIQuotes",
+                      "width=1200,height=900,resizable=1,scrollbars=1"
+                    );
+                  }}
+                />
               </View>
               <InputBoxOrdinary
                 label={"HOA Dues"}

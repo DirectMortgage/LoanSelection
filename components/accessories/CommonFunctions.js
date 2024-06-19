@@ -62,17 +62,11 @@ const handleAPI_ = async ({ name, params, method, requestOptions = null }) => {
 };
 
 function formatCurrency(value, flag, digit = 2) {
-  // let num = parseFloat(
-  //     (value || "").toString().replace("$", "").replace(",", "")
-  //   ).toString(),
-  //   numParts = num||'0'?.toFixed(digit).split("."),
-  //   dollars = numParts[0],
-  //   cents = numParts[1] || "",
-  //   sign = num == (num = Math.abs(num));
-  // dollars = dollars.replace(/\$|\,/g, "");
-  // if (isNaN(dollars)) dollars = "0";
-  // dollars = dollars.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  // let val = "$" + ((sign ? "" : "-") + dollars + (cents ? "." + cents : ".00"));
+ /*
+ Flag = 1 => to have bracket around it
+ flag = 2 => Use the same value without any additional modification
+ flag = 0 => Use only int value
+ */
   value = cleanValue(value);
   let num = parseFloat(
       (value || "").toString().replace("$", "").replace(",", "")
@@ -263,7 +257,9 @@ const handleAddons = (Row, Addons) => {
   let { BasePoints, BaseAmt, IntRate } = Row["Row"];
   let finalPoints = 0,
     finalAmount = 0,
-    finalRate = 0;
+    finalRate = 0,
+    totalAddonsPoints = 0,
+    totalAddonsAmount = 0;
   for (let i = 0; i < Addons.length; i++) {
     let AddonPoints = "",
       AddonAmount = "",
@@ -328,6 +324,9 @@ const handleAddons = (Row, Addons) => {
     formatedAmt = `${formatedAmt}`;
   }
 
+  totalAddonsPoints = finalPoints|| 0;
+  totalAddonsAmount = finalAmount|| 0;
+
   finalPoints += parseFloat(formatedPoints);
   finalAmount += parseFloat(formatedAmt);
   finalRate += parseFloat(IntRate.replace(/[^0-9.-]/g, ""));
@@ -347,7 +346,9 @@ const handleAddons = (Row, Addons) => {
     finalPoints: finalPoints,
     finalAmount: finalAmount,
     RateChosen: finalAmount.indexOf("(") != -1 ? "Credit" : "Charge",
-    finalRate: finalRate + "%",
+    finalRate: formatPercentage(finalRate,4),
+    totalAddonsPoints,
+    totalAddonsAmount
   };
   //RateBandClick(Row);
 
@@ -627,7 +628,7 @@ const fnAddDummyRow = (obj, lineIds) => {
     });
     return obj;
   } catch (error) {
-    return obj
+    return obj;
   }
 };
 
@@ -718,7 +719,7 @@ const handleProceedRunMIQuote = async (
     LTV: parseFloat(LTV),
     CLTV: parseFloat(CLTV),
   };
-  console.log('Input passed to run MI Quote ==>',obj)
+  console.log("Input passed to run MI Quote ==>", obj);
   let Response = await handleAPI({
     name: "ProceedRunMiQuote",
     params: obj,
@@ -920,7 +921,7 @@ const fnSortBy = (array, key) => {
   });
 };
 
-const handleGetUpdatedPaymentSection = async(RunID, Lineid) => {
+const handleGetUpdatedPaymentSection = async (RunID, Lineid) => {
   let obj = { RunID, Lineid };
   let Response = await handleAPI({
     name: "GetUpdatedPaymentSection",
@@ -942,36 +943,37 @@ const handleUpdateLenderComp = (EmpNum, Value, Flag) => {
     console.log("UpdateLenderComp ===>", response);
   });
 };
-const fnFindMinFICO = (data)=>{
+const fnFindMinFICO = (data) => {
   let minFicoScore = Infinity;
-  
-  data.forEach(record => {
-      record.forEach(item => {
-          if (item.columnName === 'FICO Score') {
-              const ficoScore = parseInt(item['FICO Score']);
-              if (ficoScore < minFicoScore) {
-                  minFicoScore = ficoScore;
-              }
-          }
-      });
+
+  data.forEach((record) => {
+    record.forEach((item) => {
+      if (item.columnName === "FICO Score") {
+        const ficoScore = parseInt(item["FICO Score"]);
+        if (ficoScore < minFicoScore) {
+          minFicoScore = ficoScore;
+        }
+      }
+    });
   });
-  
+
   return minFicoScore;
-}
-const fnOpenEditRightsPage =(SessionId,LoanId,FormId)=>{
+};
+const fnOpenEditRightsPage = (SessionId, LoanId, FormId) => {
   let url =
-  "../../../BorrowerApplication/Presentation/Webforms/EditRights.aspx?SessionID=" +
-  SessionId +
-  "&LoanId=" +
-  LoanId +
-  "&FormId="+FormId;
+    "../../../BorrowerApplication/Presentation/Webforms/EditRights.aspx?SessionID=" +
+    SessionId +
+    "&LoanId=" +
+    LoanId +
+    "&FormId=" +
+    FormId;
 
   window.open(
     url,
     "EditRights",
     "width=1200,height=900,resizable=1,scrollbars=1"
   );
-}
+};
 
 export {
   handleAPI,
@@ -1018,5 +1020,5 @@ export {
   handleGetUpdatedPaymentSection,
   handleUpdateLenderComp,
   fnFindMinFICO,
-  fnOpenEditRightsPage
+  fnOpenEditRightsPage,
 };

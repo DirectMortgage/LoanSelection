@@ -241,7 +241,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
 
     //======================================= MULTI LENDER =====================================
     let CommonLoanProducts = [],
-      availableCommonIds = [];
+      availableCommonIds = [],IsWorseCase = false;
     for (let i = 0; i < RawCommonLoanProducts.length; i++) {
       let LenderProducts = LoanProduct.filter(
         (e) => e["LPA_CommonData"] == RawCommonLoanProducts[i]["LPA_CommonData"]
@@ -270,12 +270,12 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
           // let isWorseCase = LnProgActiveIds.filter(
           //   (item, index) => LnProgActiveIds.indexOf(item) !== index
           // );
+          IsWorseCase = uniqueVal.length != LnProgActiveIds.length ? true : false
           CombineProp = {
             ...LenderProducts[0],
             LineIds: LineIds.join(","),
             LnProgActiveIds: LnProgActiveIds.join(","),
-            IsWorseCase:
-              uniqueVal.length != LnProgActiveIds.length ? true : false,
+            IsWorseCase:IsWorseCase,
             CommonName: RawCommonLoanProducts[i]["CommonProgramName"],
             showInfoInHeader: IsShowInfoInHeader,
           };
@@ -328,6 +328,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
           ActiveLineId: {
             ...prevContext.ActiveLineId,
             ...ActiveLineId,
+            IsWorseCase
           },
         };
       });
@@ -594,6 +595,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
         Product[i]["FinalAmt"] = BaseAmt;
         Product[i]["IntRateID"] = IntRateID;
         Product[i]["InterestRate"] = Rate;
+        Product[i]["iInterestRate"] = Rate;
         Product[i]["RateChosen"] = `${FinalPoint} | ${BaseAmt} ${RateChosen}`;
       } else {
         if (ActiveProduct?.[5]?.["RateData"]) {
@@ -639,12 +641,14 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
           };
 
           AddonsResult = handleAddons({ Row: RateBand_ }, Adjustmentarr);
-          let { finalPoints, finalAmount } = AddonsResult["FinalVal"];
+          let { finalPoints, finalAmount, finalRate } =
+            AddonsResult["FinalVal"];
 
           Product[i]["BasePoints"] = BasePoints;
           Product[i]["BaseAmount"] = BaseAmt;
           Product[i]["FinalPoint"] = finalPoints;
           Product[i]["FinalAmt"] = finalAmount;
+          Product[i]["iInterestRate"] = finalRate;
           Product[i][
             "RateChosen"
           ] = `${finalPoints} | ${finalAmount} ${AddonsResult["FinalVal"]["RateChosen"]}`;
@@ -1029,6 +1033,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
           return {
             ...PreActiveRate,
             [obj["parallelLineId"] || obj["LineId"]]: obj["Row"],
+            [obj["LineId"] || "Empty"]: obj["Row"], // Useful When If worst case scenario
             [obj["CommonId"]]: {
               IntRate: obj["Row"]["IntRate"],
               LineId: obj["LineId"],
@@ -1087,7 +1092,8 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
 
           updatedItems[Index] = {
             ...updatedItems[Index],
-            InterestRate: obj["Row"]["IntRate"],
+            InterestRate: obj["FinalVal"]["finalRate"], //obj["Row"]["IntRate"],
+            iInterestRate: obj["FinalVal"]["finalRate"],
             Payment: fnRoundUpValue(Total, 3),
             BasePoints: obj["Row"]["BasePoints"],
             BaseAmount: obj["Row"]["BaseAmt"],
@@ -1139,7 +1145,8 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
                 ...prevContext.LockRateDetails[obj["parallelLineId"]],
                 BasePoints,
                 IntRateID,
-                IntRate,
+                IntRate: finalRate,
+                InterestRate: IntRate, // This will not add any addons Rate
                 BaseAmt,
                 finalAmount,
                 finalPoints,
@@ -1337,29 +1344,29 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
         LenderCompAmt: LenderCompAmt,
         LenderCompPoint: LenderCompPoint.toFixed(3),
       };
-      LockRateDetails[LineIds[index]] = {
-        Name,
-        LenderLnProgName,
-        LockExpDate,
-        LockPeriods,
-        LockPeriodID,
-        InterestRate,
-      };
-      setContextDetails((prevContext) => {
-        return {
-          ...prevContext,
+      // LockRateDetails[LineIds[index]] = {
+      //   Name,
+      //   LenderLnProgName,
+      //   LockExpDate,
+      //   LockPeriods,
+      //   LockPeriodID,
+      //   InterestRate,
+      // };
+      // setContextDetails((prevContext) => {
+      //   return {
+      //     ...prevContext,
 
-          LockRateDetails: {
-            ...prevContext.LockRateDetails,
-            [LineIds[index]]: {
-              ...prevContext.LockRateDetails[LineIds[index]],
-              LockPeriodID,
-              LockExpDate,
-              LockPeriods,
-            },
-          },
-        };
-      });
+      //     LockRateDetails: {
+      //       ...prevContext.LockRateDetails,
+      //       [LineIds[index]]: {
+      //         ...prevContext.LockRateDetails[LineIds[index]],
+      //         LockPeriodID,
+      //         LockExpDate,
+      //         LockPeriods,
+      //       },
+      //     },
+      //   };
+      // });
     }
 
     const updatedItems = [...LoanProducts];
@@ -1386,6 +1393,32 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
     RateBandDetails["LineIds"] = ReplacedVal; // to show one grid when worse case
     RateBandDetails["NoteRate"] = NoteRate;
     setRateBands({ ...RateBands, [CommonId]: RateBandDetails });
+
+    // to trigger the active rate band after changing the lock period
+    let ActiveRateRow = {};
+    for (let i = 0; i < RateBandDetails["RateBandsRows"][LineID].length; i++) {
+      let RateBand = RateBandDetails["RateBandsRows"][LineID][i];
+      if (RateBand["IntRate"] == ActiveRate[CommonId]["IntRate"]) {
+        // console.log('change lock days ==>', RateBand)
+        ActiveRateRow = {
+          Index: i,
+          LineId: RateBand["LineId"],
+          parallelLineId:RateBand["LineId"],
+          Row: RateBand,
+          CommonId: CommonId,
+          RateSheetName: RateBand["RateSheetName"],
+          LnProgActiveId: RateBand["LnProgActiveId"],
+          activeLNPId: RateBand["LnProgActiveId"],
+        };
+        break;
+      }
+    }
+    let AddonsResult = handleAddons(
+      ActiveRateRow,
+      RateBandDetails["Addons"][LineID]
+    );
+
+    handleRateBandRowClick(AddonsResult, LockPeriodID, "No APR");
   };
 
   const handleRankByChange = (obj) => {
@@ -1566,6 +1599,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
             }
           }
         }
+        console.log("------------", { [LineIds_[index]]: CombineArr });
         CombineArr_Common = {
           ...CombineArr_Common,
           [LineIds_[index]]: CombineArr,
@@ -1589,7 +1623,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
       }
     }
     //console.log("fnAddDummyRow =>", fnAddDummyRow(CombineArr_Common, LineIds_));
-    CombineArr_Common = fnAddDummyRow(CombineArr_Common, LineIds_)
+    CombineArr_Common = fnAddDummyRow(CombineArr_Common, LineIds_);
     return {
       RateBandsRows: CombineArr_Common,
       Addons: Adjustmentarr_Common,

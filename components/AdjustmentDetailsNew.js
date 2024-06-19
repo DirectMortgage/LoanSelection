@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { View, Text, Modal, StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import {
@@ -8,12 +8,14 @@ import {
 } from "./accessories/CommomComponents";
 import CustomText from "./accessories/CustomText";
 import {
-  cleanValue,
+  context,
   formatCurrency,
   formatPercentage,
 } from "./accessories/CommonFunctions";
 import { Image } from "react-native-web";
 const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
+  const { contextDetails, setContextDetails } = useContext(context); //Get value from context
+
   const [Tab, setTab] = useState({ Adjustment: true });
 
   const { Result } = Open;
@@ -75,6 +77,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                       fnToggle("Profit");
                     }}
                   >
+                     {contextDetails["wholeSaleRights"] != 0 &&
                     <View
                       style={{
                         flexDirection: "row",
@@ -92,6 +95,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                         {"Profit Margins"}
                       </CustomText>
                     </View>
+}
                   </TouchableOpacity>
                   <TouchableOpacity
                     tabIndex={-1}
@@ -182,6 +186,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                           {
                             flex: 1,
                             paddingHorizontal: 0,
+                            left:40
                           },
                         ]}
                       >
@@ -199,7 +204,6 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                           flexDirection: "row",
                           borderTopWidth: 1,
                           borderTopColor: "#dddddd",
-                          backgroundColor: "#fff",
                           backgroundColor: "#F2F2F2",
                         }}
                       >
@@ -249,7 +253,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                             style={{
                               fontSize: 12,
                               paddingVertical: 6,
-                              color: selectedRate["BasePoints"]
+                              color: selectedRate["BasePoints"]||''
                                 .toString()
                                 .includes("(")
                                 ? "#2E862C"
@@ -267,9 +271,11 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                         >
                           <CustomText
                             style={{
+                              alignSelf:'self-end',
+                              paddingRight:30,
                               fontSize: 12,
                               paddingVertical: 6,
-                              color: selectedRate["BaseAmt"]
+                              color: selectedRate?.["BaseAmt"]||''
                                 .toString()
                                 .includes("-")
                                 ? "#2E862C"
@@ -350,7 +356,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                               style={{
                                 fontSize: 12,
                                 paddingVertical: 6,
-                                color: e["Disc"].toString().includes("(")
+                                color: (e?.["Disc"]||'').toString().includes("(")
                                   ? "#2E862C"
                                   : "#C14242",
                               }}
@@ -368,6 +374,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                           >
                             <CustomText
                               style={{
+                                alignSelf:'self-end',
+                                paddingRight:30,
                                 fontSize: 12,
                                 paddingVertical: 6,
                                 color: e["AddonAmount"].includes("(")
@@ -393,7 +401,7 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                           borderTopWidth: 2,
                           borderTopColor: "#999999",
                           backgroundColor: "#fff",
-                          backgroundColor: "#DEEAF1",
+                          backgroundColor: "#F2F2F2",
                         }}
                       >
                         <View
@@ -457,19 +465,21 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                             flex: 1,
                             paddingLeft: 15,
                           }}
-                        >
+                          >
                           <CustomText
                             style={{
+                              alignSelf:'self-end',
+                              paddingRight:30,
                               fontSize: 12,
                               paddingVertical: 6,
-                              color: Total["FinalPrice"]["finalPoints"]
+                              color: Total["FinalPrice"]["finalAmount"]
                                 .toString()
                                 .includes("(")
                                 ? "#2E862C"
                                 : "#C14242",
                             }}
                           >
-                            {Total["FinalPrice"]["finalPoints"]}
+                            {Total["FinalPrice"]["finalAmount"]}
                           </CustomText>
                         </View>
                       </View>
@@ -485,7 +495,6 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                           flexDirection: "row",
                           borderTopWidth: 1,
                           borderTopColor: "#999999",
-                          backgroundColor: "#fff",
                           backgroundColor: "#fff",
                         }}
                       >
@@ -551,6 +560,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                         >
                           <CustomText
                             style={{
+                              alignSelf:'self-end',
+                              paddingRight:30,
                               fontSize: 12,
                               paddingVertical: 6,
                             }}
@@ -573,8 +584,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                           flexDirection: "row",
                           borderTopWidth: 1,
                           borderTopColor: "#999999",
-                          backgroundColor: "#fff",
-                          backgroundColor: "#fff",
+                          backgroundColor: "#DEEAF1",
+
                         }}
                       >
                         <View
@@ -641,6 +652,8 @@ const AdjustmentDetailsNew = ({ Open, handleAdjustmentDetails }) => {
                         >
                           <CustomText
                             style={{
+                              alignSelf:'self-end',
+                              paddingRight:30,
                               fontSize: 12,
                               paddingVertical: 6,
                               color: Total["FinalPrice"]["LenderCompAmt"]

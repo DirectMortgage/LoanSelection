@@ -1936,7 +1936,7 @@ const LoanProductTable = (props) => {
               >
                 {LoanProducts?.length / 2} Loan Products
               </CustomText>
-              {contextDetails["IsWorseCase"] && (
+              {contextDetails?.['ActiveLineId']?.["IsWorseCase"] && (
                 <View
                   style={[
                     {

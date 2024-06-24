@@ -1559,6 +1559,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
               Rates,
               ActiveProduct[4]["LockPeriod"]
             );
+            if(BasePoints == 0) BasePoints = BasePoints.toString()
             if (BasePoints) {
               // # 18973
               if (false) {
@@ -1599,7 +1600,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
             }
           }
         }
-        console.log("------------", { [LineIds_[index]]: CombineArr });
+       // console.log("------------", { [LineIds_[index]]: CombineArr });
         CombineArr_Common = {
           ...CombineArr_Common,
           [LineIds_[index]]: CombineArr,

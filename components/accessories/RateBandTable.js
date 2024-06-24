@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
 import { Button } from "./CommomComponents";
 import CustomText from "./CustomText";
 import Dropdown from "./DropDown";
@@ -44,7 +44,7 @@ const RateBandTable = (props) => {
     LenderFees,
     LenderComp,
   } = RawRateBand;
-  console.log("Rate Band Component ====>>", props);
+  // console.log("Rate Band Component ====>>", props);
   const { contextDetails, setContextDetails } = useContext(context); //Get value from context
   const btnRefLock = useRef(null);
   const scrollViewRef = useRef(null);
@@ -61,7 +61,7 @@ const RateBandTable = (props) => {
     let column_ = {
       LineId: LineId,
       IntRate: formatPercentage(
-        ActiveRate[CommonId]["IntRate"] || ActiveRate["Row"]["IntRate"]
+        ActiveRate?.[CommonId]?.["IntRate"] || ActiveRate["Row"]["IntRate"]
       ),
       LnProgActiveId: ActiveRate["Row"]["LnProgActiveId"],
     };
@@ -202,7 +202,6 @@ const RateBandTable = (props) => {
       result = BasePoints + result;
       result = formatPercentage(result, digit);
     } else {
-
       Addons = parseFloat(cleanValue(Addons));
       LenderComp = parseFloat(cleanValue(LenderComp));
       sum = BasePoints + Addons + LenderComp;
@@ -287,7 +286,7 @@ const RateBandTable = (props) => {
       </View>
       <View
         style={{
-          flexDirection: "row",
+          flexDirection: contextDetails["isMobileWeb"] ? "column" : "row",
           //marginLeft: 5,
           maxWidth: "100%",
           overflowX: "scroll",
@@ -297,7 +296,7 @@ const RateBandTable = (props) => {
           <ScrollView
             style={[
               styles.wrapper,
-              { display: CheckBoxVal[e] ? "none" : "flex" },
+              { display: CheckBoxVal[e] ? "none" : "flex",borderColor: "#428BCA",borderWidth:contextDetails["isMobileWeb"] ? 0 : 2 },
             ]}
             key={e}
             testID="scrollContainer"
@@ -305,9 +304,12 @@ const RateBandTable = (props) => {
           >
             <View
               style={{
-                borderWidth: 2,
+                //borderWidth: contextDetails["isMobileWeb"] ? 0 : 2,
                 backgroundColor: "#F2F2F2",
-                borderColor: "#428BCA",
+               // borderColor: "#428BCA",
+                // borderBottomWidth: 0,
+                // borderTopWidth: 0,
+                //  maxWidth:'67%'
               }}
             >
               <View
@@ -324,12 +326,14 @@ const RateBandTable = (props) => {
                   },
                 ]}
               >
-                {/* <CustomText
-                  bold={true}
-                  style={{ fontSize: 12, color: "#848484" }}
-                >
-                  {RootObjects[e]["LenderLnProgName"]}
-                </CustomText> */}
+                {LineIds.length > 1 && (
+                  <CustomText
+                    bold={true}
+                    style={{ fontSize: 12, color: "#848484" }}
+                  >
+                    {RootObjects[e]["LenderLnProgName"]}
+                  </CustomText>
+                )}
                 {/* {RateBandsRows[e].length != 0 && (
                   <View style={{ flexDirection: "row" }}>
                     <Button
@@ -448,6 +452,8 @@ const RateBandTable = (props) => {
                     position: "sticky",
                     top: 0,
                     zIndex: 999,
+                    // borderTopWidth: 2,
+                    // borderColor: "#428BCA",
                   },
                 ]}
               >
@@ -465,17 +471,40 @@ const RateBandTable = (props) => {
                     ? "Cost After Lender Comp"
                     : "Cost"}
                 </CustomText>
-                <CustomText bold={true} style={[styles.heading, { flex: 1 }]}>
+                <CustomText
+                  bold={true}
+                  style={[
+                    styles.heading,
+                    {
+                      flex: 1,
+                      display: contextDetails["isMobileWeb"] ? "none" : "flex",
+                    },
+                  ]}
+                >
                   Rank
                 </CustomText>
-                <CustomText bold={true} style={[styles.heading, { flex: 1 }]}>
+                <CustomText
+                  bold={true}
+                  style={[
+                    styles.heading,
+                    {
+                      flex: 1,
+                      display: contextDetails["isMobileWeb"] ? "none" : "flex",
+                    },
+                  ]}
+                >
                   Difference
                 </CustomText>
               </View>
               <View
                 style={[
                   styles["SpaceAround"],
-                  { flexDirection: "column", paddingLeft: 0 },
+                  {
+                    flexDirection: "column",
+                    paddingLeft: 0,
+                    // borderBottomWidth: 2,
+                    // borderColor: "#428BCA",
+                  },
                 ]}
               >
                 {fnSortBy(RateBandsRows[e], "IntRate")?.map((column, index) => {
@@ -645,7 +674,7 @@ const RateBandTable = (props) => {
                             },
                           ]}
                         >
-                          { column["IsDummy"]
+                          {column["IsDummy"]
                             ? "-"
                             : handlePricingCalc(
                                 column["BaseAmt"],
@@ -696,6 +725,9 @@ const RateBandTable = (props) => {
                           flex: 1,
                           flexDirection: "row",
                           justifyContent: "center",
+                          display: contextDetails["isMobileWeb"]
+                            ? "none"
+                            : "flex",
                         }}
                       >
                         <View style={{ flexDirection: "row" }}>
@@ -734,10 +766,14 @@ const RateBandTable = (props) => {
                           styles["txt_Label"],
                           {
                             textAlign: "center",
+                            justifyContent: "center",
+                            display: contextDetails["isMobileWeb"]
+                              ? "none"
+                              : "flex",
                           },
                         ]}
                       >
-                        {column["Difference"] || "Ranking..."}
+                        {column["Difference"] || "Differencing..."}
                       </CustomText>
                     </View>
                   );
@@ -1411,9 +1447,10 @@ const RateBandTable = (props) => {
 };
 
 export default RateBandTable;
+const isMobileWeb = Dimensions.get("window").width <= 650;
 const styles = StyleSheet.create({
   wrapper: {
-    minWidth: 520,
+    minWidth: isMobileWeb ? "auto" : 520,
     maxWidth: 520,
     height: "auto",
     //backgroundColor: "#fff",
@@ -1424,7 +1461,7 @@ const styles = StyleSheet.create({
     overflowY: "auto",
   },
   header: {
-    fontSize: 12,
+    fontSize: isMobileWeb ? 11 : 12,
     flexDirection: "row",
     padding: 2,
     borderColor: "#428BCA",
@@ -1434,7 +1471,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     //borderBottomWidth: 1,
     // borderColor: "#F2F2F2",
-    fontSize: 12,
+    fontSize: isMobileWeb ? 11 : 12,
     alignItems: "center",
     textAlign: "center",
   },
@@ -1458,12 +1495,12 @@ const styles = StyleSheet.create({
     paddingLeft: 2,
     paddingVertical: 10,
     textAlign: "left",
-    fontSize: 12,
+    fontSize: isMobileWeb ? 11 : 12,
     backgroundColor: "#F2F2F2",
     color: "#000",
   },
   txt_Label: {
-    fontSize: 12,
+    fontSize: isMobileWeb ? 11 : 12,
     color: "#000",
     flex: 1,
     textAlign: "center",

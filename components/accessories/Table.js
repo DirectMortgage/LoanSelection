@@ -377,22 +377,18 @@ const TableNew = (props) => {
                               }}
                             >
                               <GridDropDown
-                                style={{ color: "#6c757d" }}
+                                style={{ color: "#6c757d",paddingLeft:0 }}
                                 isValid={false}
                                 label={""}
                                 options={row["columnOption"]}
                                 value={searchDetails["ddlRateMethod"] || ""}
                                 onSelect={(text) => {
-                                  // onchange({ name: "Desired Rate", value: text });
                                   onchange({
                                     name: "ddlRateMethod",
                                     value: text,
                                   });
 
-                                  // setColumn({
-                                  //   ...Column,
-                                  //   RateSection: text["label"] === "Rate Formula",
-                                  // });
+                                 
                                 }}
                                 onBlur={() => {
                                   let formattedValue = formatPercentage(
@@ -732,7 +728,8 @@ const TableNew = (props) => {
                                       },
                                 ]}
                                 onFocus={() => {
-                                  setActiveTab({ [row["columnName"]]: true });
+                                  setActiveTab({ [row["columnName"]
+                                ]: true });
                                 }}
                                 onBlur={() => {
                                   setActiveTab({ [row["columnName"]]: false });
@@ -795,7 +792,7 @@ const TableNew = (props) => {
                                             ? `${
                                                 searchDetails[row["columnName"]]
                                               }%`
-                                            : ["CLTV", 'DTI', 'Debt to Income Ratio %'].includes(row["columnName"])
+                                            : ["CLTV", 'DTI', 'Debt to Income Ratio %','Rent Ratio'].includes(row["columnName"])
                                             ? formatPercentage(
                                                 searchDetails[
                                                   row["columnName"]

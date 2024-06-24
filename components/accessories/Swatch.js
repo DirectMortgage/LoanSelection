@@ -9,6 +9,7 @@ const Swatch = ({
   value = true,
   disable = false,
   onChange = () => {},
+  style={}
 }) => {
   const [iValue, setIValue] = useState(value);
   useEffect(() => {
@@ -21,8 +22,10 @@ const Swatch = ({
           alignItems: "center",
           justifyContent: "center",
           flex: 1,
+          
         },
-        web ? { cursor: disable ? "not-allowed" : "pointer" } : {},
+          web ? { cursor: disable ? "not-allowed" : "pointer" } : {},
+          style,
       ]}
     >
       <Switch

@@ -11,6 +11,7 @@ import {
   handleAPI,
   handleGetEmpPreQualLoan,
   handleGetSessionData,
+  handleMOSearchFlow,
   handleWholeSaleRights,
   queryStringToObject,
 } from "./accessories/CommonFunctions";
@@ -49,6 +50,8 @@ const LoanSelection = (props) => {
     let queryString = queryStringToObject();
     let EmpNum = await handleGetSessionData(queryString["SessionId"], "empnum");
     let iLoanId = await handleGetEmpPreQualLoan(EmpNum);
+    let MOSearchFlow = await handleMOSearchFlow(0,iLoanId,'Get');
+    if(EmpNum == 'Output') MOSearchFlow = '[]'
     let LoanId = queryString["LoanId"] || iLoanId;
     let isLocked = await IsLockedLoan(LoanId);
     if (isLocked == 1) {
@@ -66,6 +69,7 @@ const LoanSelection = (props) => {
         IsLocked: isLocked,
         LoanId,
         EmpNum,
+        MOSearchFlow:JSON.parse(MOSearchFlow||'{}')['Table']?.[0]?.['Run_Pricing_IN_MO']||false,
         wholeSaleRights :wholeSaleRights||0,
         isLoadedInsideiFrame:
           window.parent.location.href != window.location.href,

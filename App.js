@@ -3,7 +3,7 @@ import * as Font from "expo-font";
 import LoanSelection from "./components/LoanSelection";
 import { context } from "./components/accessories/CommonFunctions";
 import { useEffect, useState } from "react";
- import Dev from './components/accessories/Dev'
+import Dev from "./components/accessories/Dev";
 
 export default function App() {
   const [contextDetails, setContextDetails] = useState({});
@@ -28,6 +28,16 @@ export default function App() {
     appearance: none;
     padding-right: 20px;
   }
+  *::-webkit-scrollbar {
+    width: 6px;               /* width of the entire scrollbar */
+  }
+
+  
+  *::-webkit-scrollbar-thumb {
+    background-color: #B6B6B6;    /* color of the scroll thumb */
+    border-radius: 20px;       /* roundness of the scroll thumb */
+  }
+  
   `;
     document.head.appendChild(styleElement);
 

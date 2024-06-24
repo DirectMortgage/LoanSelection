@@ -39,6 +39,7 @@ import {
   handleWholeSaleRights,
   handleProceedRunMIQuote,
   fnFindMinFICO,
+  handleMOSearchFlow,
 } from "./accessories/CommonFunctions";
 import DropDownButton from "./accessories/DropDownButton";
 import { web, android, ios } from "./accessories/Platform";
@@ -52,6 +53,7 @@ import LoanTable from "./accessories/LoanTable";
 import Setting from "./Setting";
 import AddressValidation from "./accessories/AddressValidation";
 import Footer from "./Footer";
+import Swatch from "./accessories/Swatch";
 
 const SearchCriteria = ({
   handleLoanProducts,
@@ -131,8 +133,8 @@ const SearchCriteria = ({
     // "Lender Fees In Rate": 0,
     TBD: "0",
     ddlRateMethod: 1,
-    "Rent Ratio": "$0.00",
-    "Debt to Income Ratio %": "0.00%"
+    "Rent Ratio": "0.00%",
+    "Debt to Income Ratio %": "0.00%",
   });
 
   const topMenuUseref = useRef();
@@ -149,10 +151,10 @@ const SearchCriteria = ({
           isMobileWeb,
         };
       });
-    //  console.log('dfgfdg')
+      //  console.log('dfgfdg')
     };
-    
-    handleUpdateSize()
+
+    handleUpdateSize();
     window.addEventListener("resize", handleUpdateSize);
     return () => window.removeEventListener("resize", handleUpdateSize);
   }, []);
@@ -220,7 +222,7 @@ const SearchCriteria = ({
           SecLenderNum,
           TermsInMonth2,
           LoanOfficer,
-          DTI
+          DTI,
         } = LoanInfo[Index]["LoanParamInfo"][0];
 
         Index = fnGetIndex(LoanInfo, "LoanSearchInfo");
@@ -252,7 +254,7 @@ const SearchCriteria = ({
         Index = fnGetIndex(LoanInfo, "BorrInfo");
         let CustIds = [],
           SSN = [],
-          CRIDs = [],
+          CRIDs = [],FTHB =0,
           showSSNPrompt = false;
         if (
           (Index != -1 &&
@@ -266,6 +268,9 @@ const SearchCriteria = ({
             let row = LoanInfo[Index]["BorrInfo"][i];
             CustIds.push(row["CustID"] || "");
             CRIDs.push(row["CRRId"] || "0");
+            if(row['firstTimeHomeBuyer'] == 'Yes' || row['firstTimeHomeBuyer'] == 1){
+              FTHB = 1
+            }
             if ((row["SSN"] || "").length < 8) showSSNPrompt = true;
             SSN.push(row["SSN"] || "");
             let brw = [
@@ -358,6 +363,7 @@ const SearchCriteria = ({
         // //   LoanAmount1st = LoanAmount2
         // //   LoanAmount2nd = LoanAmount
         // // }
+        
         setSearchDetails((prevDetails) => {
           return {
             ...prevDetails,
@@ -366,7 +372,7 @@ const SearchCriteria = ({
             "Monthly Income ($)": formatCurrency(Income),
             "Self Employed": IsSelfEmployed,
             "Liabilities ($)": formatCurrency(Liabilities),
-            "First Time Home Buyer": 0,
+            "First Time Home Buyer": FTHB||0,
             "Term (Months)": TermMonths,
             "Lien Position": LienPosition,
             "Lien Position Org": LienPosition,
@@ -400,7 +406,8 @@ const SearchCriteria = ({
             "Self Employed": IsSelfEmployed,
             Occupancy: OccupancyType,
             "FICO Score": LoanInfo[Index]["BorrInfo"][0]["FICO"],
-            'latestModifiedFICO':LoanInfo?.[Index]?.["BorrInfo"]?.[0]?.["FICO"]||0,
+            latestModifiedFICO:
+              LoanInfo?.[Index]?.["BorrInfo"]?.[0]?.["FICO"] || 0,
             "Product Type": DeBitwisedAgency,
             "Single Premium MI": handleTypeOptionsBitwise(
               "Single Premium MI",
@@ -411,11 +418,11 @@ const SearchCriteria = ({
             ddlRateMethod: ddlRateMethod,
             "Lender Fees In Rate": FeesinRate == 0 ? 2 : FeesinRate,
             "Nearest Rate Charge": NearestCharge,
-            "Rent Ratio": formatCurrency(RentRatio),
+            "Rent Ratio": formatPercentage(RentRatio,2),
             "Lenders to Search": LendersToSearch,
             TBD: TBD,
             "MI Type": MortInsPremium || 0,
-            "Debt to Income Ratio %": formatPercentage(DTI,2),
+            "Debt to Income Ratio %": formatPercentage(DTI, 2),
             "Mortgage Insurance Type": MortInsPremium || 0,
           };
         });
@@ -557,8 +564,9 @@ const SearchCriteria = ({
     });
   };
   const handleAddBorrower = (Type, Id) => {
-    let FICO = 0,SSN = [];
-    SSN = contextDetails['SSN'] || []
+    let FICO = 0,
+      SSN = [];
+    SSN = contextDetails["SSN"] || [];
     setSearchDetails((prevDetails) => {
       FICO = prevDetails["FICO Score"];
       return { ...prevDetails };
@@ -588,22 +596,21 @@ const SearchCriteria = ({
       if (contextDetails["OnloadProcess"] == "PQ")
         setBorrower((prevBorrower) => [...prevBorrower, ...brw]);
       setVAMilitary((prevVA) => [...prevVA, [...VAM]]);
-      
-      SSN.push('')
-      
+
+      SSN.push("");
     } else {
       setBorrower((prevBorrower) =>
         prevBorrower.filter((item, index) => index != Id)
       );
       setVAMilitary((prevVA) => prevVA.filter((item, index) => index !== Id));
 
-      SSN =  SSN.filter((item, index) => index != Id)
+      SSN = SSN.filter((item, index) => index != Id);
     }
     setContextDetails((prevContext) => {
       return {
         ...prevContext,
-        SSN
-       };
+        SSN,
+      };
     });
   };
   const handleChangedDetails = (obj) => {
@@ -638,7 +645,7 @@ const SearchCriteria = ({
               setSearchDetails({
                 ...searchDetails,
                 initiateMIQuote: true,
-                latestModifiedFICO:value
+                latestModifiedFICO: value,
               });
             }
           }
@@ -1267,7 +1274,7 @@ const SearchCriteria = ({
       {
         columnName: "Rent Ratio",
         columnValue: " ",
-        dataType: "Currency",
+        dataType: "Percentage",
         type: "input",
       },
       {
@@ -1314,7 +1321,7 @@ const SearchCriteria = ({
         dataType: "Percentage",
         type: "input",
         name: "DTI",
-      }
+      },
     ];
     const TermsOptions = [
       {
@@ -1605,11 +1612,9 @@ const SearchCriteria = ({
         !(miType.length == 1 && miType.includes("7"))
       ) {
         //let res = await handleOpenPopUp_MIQuote(contextDetails["LoanId"], 0); //CMS_SP_isMIQuote_Exists
-        let QualifyingFICO =null
-        if(borrowerInfo.length)
-          QualifyingFICO = fnFindMinFICO(borrowerInfo)
-        else
-          QualifyingFICO = searchDetails['FICO Score']
+        let QualifyingFICO = null;
+        if (borrowerInfo.length) QualifyingFICO = fnFindMinFICO(borrowerInfo);
+        else QualifyingFICO = searchDetails["FICO Score"];
         let res = await handleProceedRunMIQuote(
           contextDetails["LoanId"],
           QualifyingFICO || searchDetails["latestModifiedFICO"],
@@ -1642,7 +1647,6 @@ const SearchCriteria = ({
             fromRatelock: 1,
           };
           handleGetMIQuote(obj_);
-         
         }
       }
     } catch (error) {
@@ -2141,10 +2145,10 @@ const SearchCriteria = ({
         let obj = mergedData?.["DataOut"]?.[1]?.[`LineDataOut_${LineId}`];
         for (let index = 0; index < obj.length; index++) {
           let row = obj[index];
-          let key = Object.keys(row)[0];
-          if (keysToBeModify.indexOf(key) != -1) {
+          let key = Object.keys(row)[0] || 'Addons';
+          if (keysToBeModify.indexOf(key) != -1  ) {
             let point = fnGetIndex(worseCaseData, key);
-            let replacingData = worseCaseData[point][key];
+            let replacingData = worseCaseData[point]?.[key]|| [];
             obj[index][key] = replacingData;
             //console.log(key);
           }
@@ -2242,7 +2246,7 @@ const SearchCriteria = ({
       "Lender Fees In Rate": 2,
       TBD: "0",
       ddlRateMethod: 1,
-      "Rent Ratio": "$0.00",
+      "Rent Ratio": "0.00%",
     });
     setBorrower([]);
     //handleLoanProducts({});
@@ -2777,7 +2781,7 @@ const SearchCriteria = ({
                 CorresLoan: "0", // *
                 CorrespondLoanType: "0",
                 IsSelfEmployed: searchDetails["Self Employed"] || "0",
-                DTI: searchDetails["Debt to Income Ratio %"] || "0"
+                DTI: searchDetails["Debt to Income Ratio %"] || "0",
               },
             ],
           },
@@ -3619,7 +3623,11 @@ const SearchCriteria = ({
               <View
                 style={{
                   flexDirection:
-                    isMobileWeb && isMenuOpen["EditLO"] ? "column" : isMobileWeb ? 'column':"row",
+                    isMobileWeb && isMenuOpen["EditLO"]
+                      ? "column"
+                      : isMobileWeb
+                      ? "column"
+                      : "row",
                   gap: 20,
                   alignItems: "baseline",
                   maxWidth: "100%",
@@ -3745,9 +3753,17 @@ const SearchCriteria = ({
                         maxWidth: "100%",
                       }}
                     >
-                      <View  style={{ flexDirection: "column" }}>
-                        <CustomText testID="txtLOName" style={{fontSize:isMobileWeb ? 14:16}}>{GlobleValue["LOName"] || ""}</CustomText>
-                        <CustomText testID="txtCompName" style={{fontSize:isMobileWeb ? 14:16}}>
+                      <View style={{ flexDirection: "column" }}>
+                        <CustomText
+                          testID="txtLOName"
+                          style={{ fontSize: isMobileWeb ? 14 : 16 }}
+                        >
+                          {GlobleValue["LOName"] || ""}
+                        </CustomText>
+                        <CustomText
+                          testID="txtCompName"
+                          style={{ fontSize: isMobileWeb ? 14 : 16 }}
+                        >
                           {GlobleValue["CompName"]?.replace("~amp~", "&") || ""}
                         </CustomText>
                       </View>
@@ -3790,36 +3806,35 @@ const SearchCriteria = ({
                   )}
                 </View>
               </View>
-              {!contextDetails['isMobileWeb'] &&
-
-              <View testID="btnUseLastRun" style={{ alignSelf: "center" }}>
-                <Button
-                  title={
-                    <CustomText
-                      style={{
-                        color: "#FFFFF",
-                        fontSize: 11,
-                        fontWeight: 200,
-                      }}
-                    >
-                      Use Last Run
-                    </CustomText>
-                  }
-                  style={[
-                    styles["btn"],
-                    {
-                      borderRadius: 3,
-                      //marginLeft: 12,
-                      paddingVertical: 8,
-                      paddingHorizontal: 8,
-                    },
-                  ]}
-                  onPress={() => {
-                    handleUseLastRun();
-                  }}
-                />
-              </View>
-          }
+              {!contextDetails["isMobileWeb"] && (
+                <View testID="btnUseLastRun" style={{ alignSelf: "center" }}>
+                  <Button
+                    title={
+                      <CustomText
+                        style={{
+                          color: "#FFFFF",
+                          fontSize: 11,
+                          fontWeight: 200,
+                        }}
+                      >
+                        Use Last Run
+                      </CustomText>
+                    }
+                    style={[
+                      styles["btn"],
+                      {
+                        borderRadius: 3,
+                        //marginLeft: 12,
+                        paddingVertical: 8,
+                        paddingHorizontal: 8,
+                      },
+                    ]}
+                    onPress={() => {
+                      handleUseLastRun();
+                    }}
+                  />
+                </View>
+              )}
             </View>
           }
           isExpand={true}
@@ -3922,6 +3937,46 @@ const SearchCriteria = ({
                       gap: 10,
                     }}
                   >
+                    {
+                      contextDetails["wholeSaleRights"] != 0 && (
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            width: "45%",
+                          }}
+                        >
+                          <CustomText
+                            style={{
+                              fontSize: 11,
+                             // marginLeft: 5,
+                              width: "59%",
+                              color: "#6c757d",
+                            }}
+                          >
+                            Search With Memory Optimized Flow
+                          </CustomText>
+                          <Swatch
+                            style={{flex:0,alignItems:'left'}}
+                            value={contextDetails["MOSearchFlow"]}
+                            size={13}
+                            onChange={(text) => {
+                              let val = text ? 1 : 0;
+                              handleMOSearchFlow(
+                                val,
+                                contextDetails["LoanId"],
+                                "Update"
+                              );
+                              setContextDetails((prevContext) => {
+                                return {
+                                  ...prevContext,
+                                  MOSearchFlow: Boolean(val),
+                                };
+                              });
+                            }}
+                          />
+                        </View>
+                      )}
                     <Button
                       isDisable={Status["Searching"]}
                       title={

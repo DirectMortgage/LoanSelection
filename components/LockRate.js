@@ -105,6 +105,7 @@ const LockRate = (prop) => {
                     }}
                   />
                 ) : (
+                  !contextDetails["NoRateBandAvail"] &&(
                   <View style={{gap: 5}}>
                     <CustomText style={{ color: "red", fontSize: 11, width: 200 }}>{contextDetails["ErrorMsg"]}</CustomText>
                     <View style={{flexDirection: "row"}}>
@@ -142,6 +143,7 @@ const LockRate = (prop) => {
                         )}
                     </View>
                   </View>
+                  )
                 )}
                 {contextDetails["showSelectOnlyButton"] &&
                   !contextDetails["ChangeRate"] && (

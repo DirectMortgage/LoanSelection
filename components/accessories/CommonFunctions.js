@@ -800,7 +800,7 @@ const handleConstructXML = (res) => {
   RateDataXML = `<RateDataXML>${RateDataXML}</RateDataXML>`;
 
   index = fnGetIndex(changeRateResponse, "Addons");
-  let addons = changeRateResponse[index]["Addons"];
+  let addons = changeRateResponse[index]?.["Addons"]||[];
   let AddonsXML = "";
   for (let i = 0; i < addons.length; i++) {
     const element = addons[i];
@@ -982,6 +982,30 @@ const fnOpenEditRightsPage = (SessionId, LoanId, FormId) => {
   );
 };
 
+const handleMOSearchFlow = async (Value, LoanId, type) => {
+  let obj = {},
+    method = "GetMOSearchFlow";
+  if (type == "Update") {
+    obj = {
+      Value,
+      LoanId,
+    };
+    method = "UpdateSearchFlow";
+  } else {
+    obj = {
+      LoanId,
+    };
+  }
+  let response = await handleAPI({
+    name: method,
+    params: obj,
+  }).then((response) => {
+    // response = JSON.parse(response);
+    return response;
+  });
+  return response;
+};
+
 export {
   handleAPI,
   formatCurrency,
@@ -1028,4 +1052,5 @@ export {
   handleUpdateLenderComp,
   fnFindMinFICO,
   fnOpenEditRightsPage,
+  handleMOSearchFlow
 };

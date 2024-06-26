@@ -66,7 +66,7 @@ const AccordionCustom = ({
   isAccordion = true,
   overrideBG = false,
   style = {},
-  forwardedRef
+  forwardedRef,
 }) => {
   const [expanded, setExpanded] = useState(isExpand);
   function toggleItem() {
@@ -116,11 +116,12 @@ const Button = ({
   style = {},
   textStyle = {},
   isDisable = false,
-  forwardedRef,testID=""
+  forwardedRef,
+  testID = "",
 }) => (
   <TouchableOpacity
-  testID={testID}
-  ref={forwardedRef}
+    testID={testID}
+    ref={forwardedRef}
     activeOpacity={1}
     onPress={!isDisable ? onPress : ""}
     style={[
@@ -131,13 +132,21 @@ const Button = ({
         marginLeft: 8,
         backgroundColor: isDisable ? "#c1c0c0" : "#428bca",
         cursor: isDisable ? "not-allowed" : "pointer",
-        justifyContent: 'center',
+        justifyContent: "center",
       },
       style,
     ]}
   >
     <CustomText
-      style={{ ...{ color: "#fff", textAlign: "center",justifyContent:'center',display:'flex' }, ...textStyle }}
+      style={{
+        ...{
+          color: "#fff",
+          textAlign: "center",
+          justifyContent: "center",
+          display: "flex",
+        },
+        ...textStyle,
+      }}
       bold={bold}
     >
       {title}
@@ -172,11 +181,11 @@ const InputBox = (props) => {
     border,
     onKeyPress = () => {},
     disabled = false,
-    overrideDisableColor=false,
+    overrideDisableColor = false,
     width = "100%",
     style = {},
     showBorder = false,
-    isAdditionalValidation=false
+    isAdditionalValidation = false,
   } = props;
   if (type.includes("Zip")) {
     type = "numeric";
@@ -202,20 +211,23 @@ const InputBox = (props) => {
           styles.inputBox,
           {
             borderColor:
-            isAdditionalValidation || validate && ["", 0, null, undefined, "0","$0"].includes(value)
+              isAdditionalValidation ||
+              (validate && ["", 0, null, undefined, "0", "$0"].includes(value))
                 ? "red"
                 : "silver",
             borderWidth:
-            isAdditionalValidation ||  validate && ["", 0, null, undefined, "0","$0"].includes(value)
+              isAdditionalValidation ||
+              (validate && ["", 0, null, undefined, "0", "$0"].includes(value))
                 ? 2
                 : showBorder
                 ? 1
                 : 0,
-            backgroundColor: disabled&!overrideDisableColor
-              ? "#c1c0c0"
-              : showBorder
-              ? "#fff"
-              : "inherit",
+            backgroundColor:
+              disabled & !overrideDisableColor
+                ? "#c1c0c0"
+                : showBorder
+                ? "#fff"
+                : "inherit",
           },
         ]}
         autoCapitalize={"none"}
@@ -245,7 +257,7 @@ const InputBoxOrdinary = (props) => {
     isValid = false,
     isBold = false,
     Margin,
-    name
+    name,
   } = props;
   if (type.includes("Zip")) {
     type = "numeric";
@@ -261,9 +273,11 @@ const InputBoxOrdinary = (props) => {
           backgroundColor: disabled ? "#eae6e691" : "inherit",
           marginBottom: Margin ? 0 : 15,
           borderColor:
-         ( validate && ["", 0, null, undefined, "0"].includes(value))
-            ? "red":name == 'SSN' && value.replaceAll("-", "").length != 9?'red'
-            :'silver'
+            validate && ["", 0, null, undefined, "0"].includes(value) || (name == 'PA' && validate)
+              ? "red"
+              : name == "SSN" && value.replaceAll("-", "").length != 9
+              ? "red"
+              : "silver",
         },
       ]}
     >
@@ -341,7 +355,7 @@ const styles = StyleSheet.create({
   accordTitleCustom: {
     fontWeight: 800,
     fontSize: 18,
-    // lineHeight: "1.5",
+    
     color: "#666666",
     alignItems: "center",
     display: "flex",

@@ -556,13 +556,20 @@ const LoanProductTable = (props) => {
         contextDetails["OnloadProcess"] == "PQ" ? 2 : 1;
     } else {
       let index = fnGetIndex(InputParams["DataIn"], "BorrInfo");
-
       let BorrObj = InputParams["DataIn"][index]["BorrInfo"][0];
+
+      //index = fnGetIndex(InputParams["DataIn"], "PropertyInfo");
+      let propertyAddress =
+        InputParams["DataIn"]?.[2]?.["PropertyInfo"]?.[0]?.["SubjectAddress"] ||
+        "";
       try {
         if (
           BorrObj["FirstName"].length &&
           BorrObj["LastName"].length &&
-          (contextDetails?.["TBD"] == 0 || action.indexOf("Lock") == -1)
+          (!["0", "", "tbd", "to be determined", null, undefined].includes(
+            propertyAddress?.trim().toLowerCase()
+          ) ||
+            action.indexOf("Lock") == -1)
           // BorrObj["SSN"] && BorrObj["SSN"].replace("-", "").length == 9
         )
           allowSave = true;
@@ -579,36 +586,51 @@ const LoanProductTable = (props) => {
       contextDetails["InputData"]?.["DataIn"]?.[2]?.["PropertyInfo"]?.[0]?.[
         "SubjectAddress"
       ] || "";
-    if (["tbd", "to be determined"].includes(propertyAddress.toLowerCase())) {
-      if (contextDetails["TBD"] != 1) handleTBD(1);
-    }
+    // if (["tbd", "to be determined"].includes(propertyAddress.toLowerCase())) {
+    //   if (contextDetails["TBD"] != 1) handleTBD(1);
+    // }
     try {
       let borInfo = contextDetails["InputData"]["DataIn"][1]["BorrInfo"];
       let blockSaving = false;
+      let validateFields = { stopSSNSave: false, InvalidBorAddress: false };
       borInfo.map((e) => {
         if ((e["SSN"] || "").length != 11) {
           blockSaving = true;
         }
       });
-      if (blockSaving && action.indexOf("Lock") != -1) {
-        setContextDetails((prevContext) => {
-          return {
-            ...prevContext,
-            stopSSNSave: true,
-          };
-        });
-        return;
+
+      if (
+        ["0", "", "tbd", "to be determined", null, undefined].includes(
+          propertyAddress?.trim().toLowerCase()
+        ) &&
+        action.indexOf("Lock") != -1
+      ) {
+        validateFields["InvalidBorAddress"] = true;
+        allowSave = false;
       } else {
-        setContextDetails((prevContext) => {
-          return {
-            ...prevContext,
-            stopSSNSave: false,
-          };
-        });
+        validateFields["InvalidBorAddress"] = false;
+      }
+
+      if (blockSaving && action.indexOf("Lock") != -1) {
+        validateFields["stopSSNSave"] = true;
+        allowSave = false;
+      } else {
+        validateFields["stopSSNSave"] = false;
+      }
+
+      setContextDetails((prevContext) => {
+        return {
+          ...prevContext,
+          ...validateFields,
+        };
+      });
+      if (allowSave && action.indexOf("Lock") != -1) {
+        fnSelectAddress("Select", "Auto Validation"); // Automatic Address validation
       }
     } catch (error) {}
     if (!allowSave) return; // Restrict when required fields are not filled
     console.log("saving the searching info ==>", contextDetails["InputData"]);
+
     setContextDetails((prevContext) => {
       return {
         ...prevContext,
@@ -1821,10 +1843,12 @@ const LoanProductTable = (props) => {
       });
       //setOpen({ ...Open, AddressValidation: false });
       let checkPreQual = await IsPreQualLoan(contextDetails["LoanId"], 0);
-      fnLockConfirmationModalValidation(
-        checkPreQual,
-        contextDetails["currentLockingLineId"]
-      );
+      if (value != "Auto Validation") {
+        fnLockConfirmationModalValidation(
+          checkPreQual,
+          contextDetails["currentLockingLineId"]
+        );
+      }
     }
   };
   const ManualValidation = async () => {
@@ -1835,7 +1859,7 @@ const LoanProductTable = (props) => {
       params: obj,
     }).then((response) => {
       // response = JSON.parse(response);
-      // console.log("ManualValidation ==>", response);
+      console.log("ManualValidation ==>", response);
       return response;
     });
     return Response;
@@ -1963,7 +1987,11 @@ const LoanProductTable = (props) => {
               <View
                 style={{
                   flexDirection: "row",
-                  justifyContent: contextDetails?.["ActiveLineId"]?.["IsWorseCase"] ?"space-between":'flex-end',
+                  justifyContent: contextDetails?.["ActiveLineId"]?.[
+                    "IsWorseCase"
+                  ]
+                    ? "space-between"
+                    : "flex-end",
                   gap: 7,
                   alignItems: "center",
                 }}
@@ -1993,15 +2021,15 @@ const LoanProductTable = (props) => {
                       </CustomText>
                     </>
                   </View>
-                ) }
+                )}
                 <View>
-                <SwatchOutlined
-                  size={15}
-                  value={LenderComp}
-                  onChange={() => {
-                    handleLenderComp(!LenderComp);
-                  }}
-                ></SwatchOutlined>
+                  <SwatchOutlined
+                    size={15}
+                    value={LenderComp}
+                    onChange={() => {
+                      handleLenderComp(!LenderComp);
+                    }}
+                  ></SwatchOutlined>
                 </View>
               </View>
             </View>

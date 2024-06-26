@@ -201,23 +201,23 @@ const LockConfirmation = (props) => {
         if (Object.keys(response?.[2]).length == 0 && Polling < 4) {
           Polling = Polling + 1;
           setTimeout(() => {
-          handleDoLockRateProcess(
-            0,
-            EmpNum,
-            "",
-            "",
-            "",
-            LoanId,
-            0,
-            "",
-            SessionId,
-            "",
-            2, // Lock confirmation
-            1,
-            0, //pageload
-            Polling
-          );
-          },500);
+            handleDoLockRateProcess(
+              0,
+              EmpNum,
+              "",
+              "",
+              "",
+              LoanId,
+              0,
+              "",
+              SessionId,
+              "",
+              2, // Lock confirmation
+              1,
+              0, //pageload
+              Polling
+            );
+          }, 500);
         } else if (Polling > 4) {
           console.log("Polling count ==>", Polling);
         } else {
@@ -233,34 +233,68 @@ const LockConfirmation = (props) => {
             ClosingDocsSent,
             lockaccess,
           } = response?.[1]?.["LockConfObjects"]?.[0];
-          
-          let showLockExtend = 0, showLockbtn = 0, showChangeRate = 0, showCancelLock = 0, showFloatDown_ = 0, 
-          showRelock = 0;
-          
-          if (showchangeintrate == "1" && (allowlockstatus == "1" || allowlockstatus == "0") &&
-              funded == "0" && settled == "0" && withdrawn == 0)
-            showLockExtend = 1;
-          if (showrelock == "1" && settled == "0" && finaluw == "1") showLockbtn = 1;
-          if (showchangeintrate == "1" && funded == "0" && settled == "0" && finaluw == "0") showChangeRate = 1;
-          if (funded == "0" && settled == "0") showCancelLock = 1;
-          if (showchangeintrate == "1" && (allowlockstatus == "1" || allowlockstatus == "0") &&
-              funded == "0" && settled == "0" && withdrawn == "0" && closed == "0")
-            showFloatDown_ = 1;
-          if (showchangeintrate == "0" && lockaccess == "1" && funded == "0" && settled == "0" && 
-              ClosingDocsSent == "0" && withdrawn == 0)
-            showRelock = 1;
-          
-            // Passing the details to Lock Confirmation page
-          let existingInfo = JSON.parse(localStorage.getItem("LoanSelectioInfo") || "{}");
 
-          if (existingInfo[LoanId] && Object.keys(existingInfo[LoanId]).length > 0 && Object.keys(response?.[2]).length == 0) {
+          let showLockExtend = 0,
+            showLockbtn = 0,
+            showChangeRate = 0,
+            showCancelLock = 0,
+            showFloatDown_ = 0,
+            showRelock = 0;
+
+          if (
+            showchangeintrate == "1" &&
+            (allowlockstatus == "1" || allowlockstatus == "0") &&
+            funded == "0" &&
+            settled == "0" &&
+            withdrawn == 0
+          )
+            showLockExtend = 1;
+          if (showrelock == "1" && settled == "0" && finaluw == "1")
+            showLockbtn = 1;
+          if (
+            showchangeintrate == "1" &&
+            funded == "0" &&
+            settled == "0" &&
+            finaluw == "0"
+          )
+            showChangeRate = 1;
+          if (funded == "0" && settled == "0") showCancelLock = 1;
+          if (
+            showchangeintrate == "1" &&
+            (allowlockstatus == "1" || allowlockstatus == "0") &&
+            funded == "0" &&
+            settled == "0" &&
+            withdrawn == "0" &&
+            closed == "0"
+          )
+            showFloatDown_ = 1;
+          if (
+            showchangeintrate == "0" &&
+            lockaccess == "1" &&
+            funded == "0" &&
+            settled == "0" &&
+            ClosingDocsSent == "0" &&
+            withdrawn == 0
+          )
+            showRelock = 1;
+
+          // Passing the details to Lock Confirmation page
+          let existingInfo = JSON.parse(
+            localStorage.getItem("LoanSelectioInfo") || "{}"
+          );
+
+          if (
+            existingInfo[LoanId] &&
+            Object.keys(existingInfo[LoanId]).length > 0 &&
+            Object.keys(response?.[2]).length == 0
+          ) {
             delete response?.[1]?.["LockConfObjects"]?.[0]["comppointsreq"];
             delete response?.[1]?.["LockConfObjects"]?.[0]["RateChosenPoint"];
             delete response?.[1]?.["LockConfObjects"]?.[0]["comppointsadj"];
             delete response?.[1]?.["LockConfObjects"]?.[0]["RateChosenPoint"];
             delete response?.[1]?.["LockConfObjects"]?.[0]["comppointsadj"];
             delete response?.[1]?.["LockConfObjects"]?.[0]["compamtadj"];
-          } 
+          }
           // else {
           //   let addons = response?.[2]?.["Addons"];
           //   setAddons(addons);
@@ -292,7 +326,7 @@ const LockConfirmation = (props) => {
           //   "SupervisorEdit"
           // );
           // Passing the details to Lock Confirmation page
-          let json = {...existingInfo, [LoanId]: {}};
+          let json = { ...existingInfo, [LoanId]: {} };
           localStorage.setItem("LoanSelectioInfo", JSON.stringify(json));
         }
 
@@ -342,12 +376,12 @@ const LockConfirmation = (props) => {
           ...preLockDetails,
           Actincome: Column1,
           Expincome: Column2,
-          funddate: Column3,
+          funddate: formatDateTimeNew(Column3 || ""),
           LoanProgId: Column4,
           FICORetailAdj: Column5,
           WarmHotLeadAdj: Column6,
           CheckAmount: Column7,
-          ChkReceivedDate: Column8,
+          ChkReceivedDate: formatDateTimeNew(Column8 || ""),
           DocumentDate: Column9,
           LeadSource: Column10,
           LeadSourcePriceAdj: Column11,
@@ -594,9 +628,13 @@ const LockConfirmation = (props) => {
         "WholesaleLockExpire",
         "complockeddate",
         "complockexpire",
+        "funddate",
+        "ChkReceivedDate",
       ].includes(name)
     ) {
       value = formatDateTimeNew(value);
+    } else if (["CheckAmount"].includes(name)) {
+      value = formatCurrency(value, 2, 2);
     }
     setLockDetails((prevLockDetails) => {
       return {
@@ -677,6 +715,7 @@ const LockConfirmation = (props) => {
       WholesaleLockDate,
       WholesaleDeliveryDate,
       WholesaleLockExpire,
+      funddate,
     } = LockDetails;
     WholesaleDeliveryDate = WholesaleDeliveryDate || "";
     leadPricingAdjustment = leadPricingAdjustment || "0";
@@ -740,7 +779,7 @@ const LockConfirmation = (props) => {
       '" ActualIncome="' +
       0 +
       '" DateFunded="' +
-      "" +
+      funddate +
       '" ServicerLoanNumber="' +
       ServicerLoanNumber +
       '" WarmHotLeadAdjval="' +
@@ -1184,7 +1223,11 @@ const LockConfirmation = (props) => {
   // ********************************* Transfer Lock Ends here ******************************
 
   const handlePageSave = async () => {
-    if(LockDetails['ValidCommitmentId'] == false && LockDetails["CommitmentId"].length >0) return
+    if (
+      LockDetails["ValidCommitmentId"] == false &&
+      LockDetails["CommitmentId"].length > 0
+    )
+      return;
     let borSwatchWait = await handleSaveBorSwatch();
     if (LockDetails["SupervisorEdit"]) {
       let supervisorSaveWait = await handleSupervisorSave();
@@ -2915,8 +2958,14 @@ const LockConfirmation = (props) => {
       let tempValues = JSON.parse(localStorage.getItem("LoanSelectioInfo"))[
         contextDetails["LoanId"]
       ];
-      let { finalRate, finalPoints, finalAmount, BasePoints, BaseAmount, InterestRate } =
-        tempValues["RateInfo"];
+      let {
+        finalRate,
+        finalPoints,
+        finalAmount,
+        BasePoints,
+        BaseAmount,
+        InterestRate,
+      } = tempValues["RateInfo"];
       setLockDetails((prevLockDetails) => {
         return {
           ...prevLockDetails,
@@ -3056,6 +3105,21 @@ const LockConfirmation = (props) => {
         btnSave.removeAttribute("disabled");
       }
       //console.log("ValidateCommitment ===>", response);
+    });
+  };
+  const handleCreateDepositeEntry = () => {
+    let { funddate, ChkReceivedDate, CheckAmount, DocumentDate } = LockDetails;
+    let obj = {
+      LoanId: contextDetails["LoanId"],
+      CheckAmount: cleanValue(CheckAmount || 0),
+      CheckDate: ChkReceivedDate || "1900-01-01 00:00:00.000",
+      DocumentReviewed: DocumentDate || 0,
+    };
+    handleAPI({
+      name: "CreateDepositEntry",
+      params: obj,
+    }).then((response) => {
+      console.log("CreateDepositEntry ==>", response);
     });
   };
   //======================================= Function declaration Ends ===============================================
@@ -5932,6 +5996,198 @@ const LockConfirmation = (props) => {
                             </View> */}
                             </View>
                           </View>
+                          {LockDetails["LoanProgId"] == "6002" && (
+                            <View style={{ marginTop: 10 }}>
+                              <View>
+                                <CustomText
+                                  style={{
+                                    fontWeight: 800,
+                                    fontSize: 18,
+
+                                    color: "#666666",
+                                    alignItems: "center",
+                                    display: "flex",
+                                  }}
+                                >
+                                  Funding Information
+                                </CustomText>
+                              </View>
+                              <View
+                                style={{
+                                  borderTopColor: "#c6c6c6",
+                                  borderTopWidth: 1,
+                                  marginVertical: 8,
+                                }}
+                              ></View>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  gap: 60,
+                                }}
+                              >
+                                <View style={{ gap: 3, flex: 1 }}>
+                                  <CustomText style={[styles["SemiMidText"]]}>
+                                    Date Funded
+                                  </CustomText>
+
+                                  <View>
+                                    <InputBox
+                                      validate={false}
+                                      showBorder={true}
+                                      value={LockDetails["funddate"] || ""}
+                                      onChangeText={(text) => {
+                                        handleOnchangeDetails(
+                                          "funddate",
+                                          text,
+                                          "investorInfo"
+                                        );
+                                      }}
+                                      onBlur={(text) => {
+                                        text = text.target.value || "";
+                                        handleOnBlur("funddate", text);
+                                      }}
+                                    />
+                                  </View>
+                                </View>
+                                <View style={{ gap: 3, flex: 1 }}>
+                                  <CustomText style={[styles["SemiMidText"]]}>
+                                    Check Received Date
+                                  </CustomText>
+
+                                  <View>
+                                    <InputBox
+                                      validate={false}
+                                      showBorder={true}
+                                      value={
+                                        LockDetails["ChkReceivedDate"] || ""
+                                      }
+                                      onChangeText={(text) => {
+                                        handleOnchangeDetails(
+                                          "ChkReceivedDate",
+                                          text,
+                                          "investorInfo"
+                                        );
+                                      }}
+                                      onBlur={(text) => {
+                                        text = text.target.value || "";
+                                        handleOnBlur("ChkReceivedDate", text);
+                                      }}
+                                    />
+                                  </View>
+                                </View>
+                                <View style={{ gap: 3, flex: 1 }}>
+                                  <CustomText style={[styles["SemiMidText"]]}>
+                                    Check Received Amount
+                                  </CustomText>
+
+                                  <View>
+                                    <InputBox
+                                      validate={false}
+                                      showBorder={true}
+                                      value={LockDetails["CheckAmount"]}
+                                      onChangeText={(text) => {
+                                        handleOnchangeDetails(
+                                          "CheckAmount",
+                                          text,
+                                          "investorInfo"
+                                        );
+                                      }}
+                                      onFocus={() => {
+                                        let val = cleanValue(
+                                          LockDetails["CheckAmount"] || "0"
+                                        );
+                                        handleOnchangeDetails(
+                                          "CheckAmount",
+                                          val,
+                                          "investorInfo"
+                                        );
+                                      }}
+                                      onBlur={(text) => {
+                                        text = text.target.value || "";
+                                        handleOnBlur("CheckAmount", text);
+                                      }}
+                                    />
+                                  </View>
+                                </View>
+                              </View>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  gap: 60,
+                                  marginTop: 5,
+                                }}
+                              >
+                                <View style={{ gap: 3, flex: 1 }}>
+                                  <CustomText style={[styles["SemiMidText"]]}>
+                                    Documentation Reviewed
+                                  </CustomText>
+                                  <View style={{ alignItems: "flex-start" }}>
+                                    <Swatch
+                                      value={
+                                        LockDetails["DocumentDate"] == 1 ||
+                                        false
+                                      }
+                                      size={13}
+                                      //disable={LockDetails["wssettled"] == 1}
+                                      onChange={(text) => {
+                                        let val = text ? 1 : 0;
+                                        handleOnchangeDetails(
+                                          "DocumentDate",
+                                          val,
+                                          "investorInfo"
+                                        );
+                                      }}
+                                    />
+                                  </View>
+                                </View>
+                                <View style={{ gap: 3, flex: 1 }}></View>
+                                <View
+                                  style={{
+                                    gap: 3,
+                                    flex: 1,
+                                    justifyContent: "flex-end",
+                                  }}
+                                >
+                                  <View
+                                    style={{
+                                      flexDirection: "row",
+                                      justifyContent: "flex-end",
+                                      gap: 6,
+                                    }}
+                                  >
+                                    <Button
+                                      title={
+                                        <CustomText
+                                          style={{
+                                            color: "#FFFFF",
+                                            fontSize: 11,
+                                            fontWeight: 200,
+                                          }}
+                                        >
+                                          Create Deposit Entry
+                                        </CustomText>
+                                      }
+                                      style={[
+                                        styles["btn"],
+                                        styles["cardShadow"],
+                                        {
+                                          borderRadius: 3,
+                                          paddingVertical: 6,
+                                          paddingHorizontal: 8,
+                                          borderWidth: 2,
+                                          borderColor: "#0d6ac5",
+                                          marginLeft: 0,
+                                        },
+                                      ]}
+                                      onPress={() => {
+                                        handleCreateDepositeEntry();
+                                      }}
+                                    />
+                                  </View>
+                                </View>
+                              </View>
+                            </View>
+                          )}
                         </View>
                       </View>
                     </View>

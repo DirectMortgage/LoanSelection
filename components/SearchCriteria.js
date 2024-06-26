@@ -424,6 +424,12 @@ const SearchCriteria = ({
             "MI Type": MortInsPremium || 0,
             "Debt to Income Ratio %": formatPercentage(DTI, 2),
             "Mortgage Insurance Type": MortInsPremium || 0,
+            RequestEscrowWaiver:RequestEscrow||0,
+            EnergyEfficient:EnergyEffMort||0,
+            PropertylistedMLS:PropertylistedonMLS||0,
+            DownPaymentGift:NonProfitGiftFund||0,
+            NoPPP:SearchNoPPP||0,
+            LawEnforcement:LawEnforceGrant||0
           };
         });
         //*************************************** Search section details binding portion *****************************
@@ -913,6 +919,7 @@ const SearchCriteria = ({
           ...prevContext,
           currentProcess: "GotPageInfo",
           showPageSpinner: false,
+          enableUseLastRun :true
         };
       });
       try {
@@ -1086,6 +1093,9 @@ const SearchCriteria = ({
           StateOpt: response["Table3"],
         };
       });
+      try {
+        window.parent.resizeIframe();
+      } catch (error) {}
       // console.log("TypeOption ====>", TypeOption);
     });
   };
@@ -1181,8 +1191,9 @@ const SearchCriteria = ({
         //   val.includes(type.TypeOption) ? type.TypeBitwise : 0
         // );
         val = val.toString();
+        val = val.split(",").map(item => item.trim());
         const typeBitwiseArray = options.map((type) =>
-          val.split(",").indexOf(type.TypeOption) != -1 ? type.TypeBitwise : 0
+          val.indexOf(type.TypeOption) != -1 ? type.TypeBitwise : 0
         );
 
         // Sum the resulting array
@@ -1506,6 +1517,9 @@ const SearchCriteria = ({
       });
       return;
     }
+    setContextDetails((prevContext) => {
+      return {
+        ...prevContext, UseLastRunProcessing: true }}); 
     let obj = {
       SearchId: 0,
       LoanId: LoanId ? LoanId : GlobleValue["PQLoanId"], //405333,
@@ -1514,6 +1528,9 @@ const SearchCriteria = ({
       name: "Get_LastLoanSearch",
       params: obj,
     }).then((response) => {
+      setContextDetails((prevContext) => {
+        return {
+          ...prevContext, UseLastRunProcessing: false }}); 
       if (!response) return;
       response = JSON.parse(response)["Table"][0]["SearchJSON"];
       if (response == "{}") {
@@ -1521,7 +1538,7 @@ const SearchCriteria = ({
         return;
       }
       response = JSON.parse(response);
-      SetLoanDetail({ ...LoanDetails, UseLastRun: response["DataIn"] });
+      SetLoanDetail({ ...LoanDetails, UseLastRun: response["DataIn"]}); // Hits the UseEffect
       try {
         window.parent.resizeIframe();
       } catch (error) {}
@@ -1645,6 +1662,7 @@ const SearchCriteria = ({
             PlanType: PlanType,
             VendorIds: "",
             fromRatelock: 1,
+            coverages:''
           };
           handleGetMIQuote(obj_);
         }
@@ -3809,6 +3827,7 @@ const SearchCriteria = ({
               {!contextDetails["isMobileWeb"] && (
                 <View testID="btnUseLastRun" style={{ alignSelf: "center" }}>
                   <Button
+                  isDisable={contextDetails?.["UseLastRunProcessing"] || !contextDetails['enableUseLastRun']}
                     title={
                       <CustomText
                         style={{
@@ -3817,7 +3836,7 @@ const SearchCriteria = ({
                           fontWeight: 200,
                         }}
                       >
-                        Use Last Run
+                        {contextDetails?.['UseLastRunProcessing'] ? 'Fetching...' :'Use Last Run'}
                       </CustomText>
                     }
                     style={[

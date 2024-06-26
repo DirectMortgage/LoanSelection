@@ -51,7 +51,7 @@ const LoanSelection = (props) => {
     let EmpNum = await handleGetSessionData(queryString["SessionId"], "empnum");
     let iLoanId = await handleGetEmpPreQualLoan(EmpNum);
     let MOSearchFlow = await handleMOSearchFlow(0,iLoanId,'Get');
-    if(EmpNum == 'Output') MOSearchFlow = '[]'
+    if(EmpNum == 'Output' || EmpNum.length == 0) MOSearchFlow = '[]'
     let LoanId = queryString["LoanId"] || iLoanId;
     let isLocked = await IsLockedLoan(LoanId);
     if (isLocked == 1) {
@@ -83,7 +83,7 @@ const LoanSelection = (props) => {
   };
 
   return (
-    <View style={{ width: "100%", alignItems: "center", flex: 1 }}>
+    <View style={{ width: "100%", alignItems: "center" }} testID={'viewWrapper'}>
       {/* <Header name={headerInfo["name"]} icon={headerInfo["icon"]} /> */}
       {(contextDetails["IsLocked"] == 1 || Status["LoanLocked"] ) &&
       !Status["ChangeRate"] &&
@@ -119,7 +119,7 @@ const LoanSelection = (props) => {
         </>
       ) : (
         <>
-          <View style={{ flex: 1, backgroundColor: "#dddddd", width: "100%" }}>
+          <View style={{ height:'90vh', backgroundColor: "#dddddd", width: "100%" }}>
             <ArrowSpinner size={50} />
           </View>
         </>

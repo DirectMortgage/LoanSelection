@@ -963,7 +963,8 @@ const fnFindMinFICO = (data) => {
       }
     });
   });
-
+if(minFicoScore == 'Infinity')
+  minFicoScore = false;
   return minFicoScore;
 };
 const fnOpenEditRightsPage = (SessionId, LoanId, FormId) => {

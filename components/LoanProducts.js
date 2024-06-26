@@ -970,6 +970,11 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
       "FreshLoad"
     );
 
+    setTimeout(() => {
+      try {
+        window.parent.resizeIframe();
+      } catch (error) {}
+    }, 1000);
     //console.log("Product click addons ===>", AddonsResult);
     //console.log("Rate band details===>", RateBandDetails);
   };

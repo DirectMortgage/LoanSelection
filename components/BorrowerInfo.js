@@ -8,7 +8,7 @@ import Dropdown from "./accessories/DropDown";
 import ArrowSpinner from "./accessories/ArrowSpinner";
 const BorrowerInfo = (prop) => {
   const { contextDetails, setContextDetails } = useContext(context); //Get value from context
-   console.log("Context from LockRate ==>", contextDetails);
+  console.log("Context from LockRate ==>", contextDetails);
   const { Open, handleLockConfirm, handleChange, handleTBD } = prop;
   let { action, BorInfo, LineId, modalFor } = Open;
   let { FirstName, LastName, SSN } =
@@ -31,38 +31,41 @@ const BorrowerInfo = (prop) => {
             <View style={styles.container}>
               {modalFor == "SSN" ? (
                 <>
-            <View style={{ marginBottom: 20 }}>
-              <CustomText>
-                {`Great, let's Lock your Rate. Before proceeding, please enter the Social Security Number. `}
-              </CustomText>
-            </View>
-            {contextDetails['InputData']['DataIn'][1]['BorrInfo'].map((e,index)=>(
-
-                <View style={{ gap: 20,marginBottom:10 }}>
-                  <View>
-                    <CustomText>{`Name: ${e['FirstName']} ${e['LastName']}`}</CustomText>
+                  <View style={{ marginBottom: 20 }}>
+                    <CustomText>
+                      {`Great, let's Lock your Rate. Before proceeding, please enter the Social Security Number. `}
+                    </CustomText>
                   </View>
-                  <View style={styles["InputWidth"]}>
-                    <InputBoxOrdinary
-                      label={"Social Security Number"}
-                      name={"SSN"}
-                      validate={(e['SSN'] || "")?.replaceAll("-", "").length != 9}
-                      value={e['SSN'] || ""}
-                      onChangeText={(text) => {
-                        let obj = {
-                          name: "SSN",
-                          value: text,
-                          index
-                        };
-                        handleChange("OnChange", 0, "OnChange", obj);
-                      }}
-                    ></InputBoxOrdinary>
-                  </View>
-                </View>
-            ))}
+                  {contextDetails["InputData"]["DataIn"][1]["BorrInfo"].map(
+                    (e, index) => (
+                      <View style={{ gap: 20, marginBottom: 10 }}>
+                        <View>
+                          <CustomText>{`Name: ${e["FirstName"]} ${e["LastName"]}`}</CustomText>
+                        </View>
+                        <View style={styles["InputWidth"]}>
+                          <InputBoxOrdinary
+                            label={"Social Security Number"}
+                            name={"SSN"}
+                            validate={
+                              (e["SSN"] || "")?.replaceAll("-", "").length != 9
+                            }
+                            value={e["SSN"] || ""}
+                            onChangeText={(text) => {
+                              let obj = {
+                                name: "SSN",
+                                value: text,
+                                index,
+                              };
+                              handleChange("OnChange", 0, "OnChange", obj);
+                            }}
+                          ></InputBoxOrdinary>
+                        </View>
+                      </View>
+                    )
+                  )}
                 </>
               ) : (
-                <View >
+                <View>
                   <View style={{ marginBottom: 20 }}>
                     <CustomText>
                       {`Great, let's ${
@@ -107,7 +110,7 @@ const BorrowerInfo = (prop) => {
                           <CustomText>
                             This property address is To Be Determined
                           </CustomText>
-                          {contextDetails["AddressValid"] == 0 && (
+                          {/* {contextDetails["AddressValid"] == 0 && ( */}
                             <Button
                               title={
                                 <CustomText
@@ -143,17 +146,22 @@ const BorrowerInfo = (prop) => {
                                 handleChange("OnChange", 0, "OnChange", obj);
                               }}
                             />
-                          )}
+                          {/* )} */}
                         </View>
                       </View>
                       <View style={[styles["Row"], { gap: 10 }]}>
                         <View style={styles["InputWidth"]}>
                           <InputBoxOrdinary
                             label={"Property Street Address"}
-                            validate={
-                              SubjectAddress == "" && contextDetails["TBD"] == 0
-                            }
-                            disabled={contextDetails["TBD"] == 1}
+                            validate={[
+                              "0",
+                              "",
+                              "tbd",
+                              "to be determined",
+                              null,
+                              undefined,
+                            ].includes(SubjectAddress?.trim().toLowerCase())}
+                            //disabled={contextDetails["TBD"] == 1}
                             name={"PA"}
                             value={SubjectAddress == "0" ? "" : SubjectAddress}
                             onChangeText={(text) => {
@@ -281,14 +289,25 @@ const BorrowerInfo = (prop) => {
                     </CustomText>
                   </View>
                 )}
-                {contextDetails["stopSSNSave"] && (
+                {contextDetails["stopSSNSave"] ||
+                contextDetails["InvalidBorAddress"] ? (
                   <View
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 5,
+                      maxWidth:240
                     }}
-                  ><CustomText style={{color:'red',fontSize:12}}>Please enter a Social Security Number...</CustomText></View>)}
+                  >
+                    <CustomText style={{ color: "red", fontSize: 12 }}>
+                      {contextDetails["InvalidBorAddress"]
+                        ? "A valid property address is needed before proceeding to a Rate Lock."
+                        : contextDetails["stopSSNSave"]
+                        ? "Please enter a Social Security Number..."
+                        : ""}
+                    </CustomText>
+                  </View>
+                ) : null}
                 <Button
                   title={
                     <CustomText

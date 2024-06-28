@@ -33,9 +33,36 @@ const BorrowerInfo = (prop) => {
                 <>
                   <View style={{ marginBottom: 20 }}>
                     <CustomText>
-                      {`Great, let's Lock your Rate. Before proceeding, please enter the Social Security Number. `}
+                      {`Great, let's Lock your Rate. Before proceeding, please enter the Details. `}
                     </CustomText>
                   </View>
+                  {contextDetails['IncludeAddressField'] &&
+                  <View style={styles["InputWidth"]}>
+                    <InputBoxOrdinary
+                      label={"Property Street Address"}
+                      validate={[
+                        "0",
+                        "",
+                        "tbd",
+                        "to be determined",
+                        null,
+                        undefined,
+                      ].includes(SubjectAddress?.trim().toLowerCase())}
+                      //disabled={contextDetails["TBD"] == 1}
+                      name={"PA"}
+                      value={SubjectAddress == "0" ? "" : SubjectAddress}
+                      onChangeText={(text) => {
+                        let obj = {
+                          name: "SubjectAddress",
+                          value: text,
+                        };
+                        handleChange("OnChange", 0, "OnChange", obj);
+                      }}
+                    ></InputBoxOrdinary>
+                  </View>
+                  }
+                  {contextDetails['showSSNPrompt']&&
+                  <View>
                   {contextDetails["InputData"]["DataIn"][1]["BorrInfo"].map(
                     (e, index) => (
                       <View style={{ gap: 20, marginBottom: 10 }}>
@@ -63,6 +90,8 @@ const BorrowerInfo = (prop) => {
                       </View>
                     )
                   )}
+                  </View>
+}
                 </>
               ) : (
                 <View>
@@ -111,41 +140,41 @@ const BorrowerInfo = (prop) => {
                             This property address is To Be Determined
                           </CustomText>
                           {/* {contextDetails["AddressValid"] == 0 && ( */}
-                            <Button
-                              title={
-                                <CustomText
-                                  bold={false}
-                                  style={{
-                                    fontSize: 10,
-                                    color: "#fff",
-                                    fontWeight: 200,
-                                  }}
-                                >
-                                  {contextDetails?.["TBD"] == 0
-                                    ? "TBD = No"
-                                    : "TBD = Yes"}
-                                </CustomText>
-                              }
-                              style={{
-                                paddingHorizontal: 5,
-                                paddingVertical: 2,
-                                alignSelf: "flex-end",
-                                fontSize: 10,
-                                // left: 30,
-                                //bottom: 4,
-                                backgroundColor:
-                                  contextDetails["TBD"] == 0
-                                    ? "#428bca"
-                                    : "#d9534f",
-                              }}
-                              onPress={() => {
-                                let value =
-                                  contextDetails["TBD"] == 1 ? "0" : "1";
-                                let obj = { name: "TBD", value: value };
-                                handleTBD(value);
-                                handleChange("OnChange", 0, "OnChange", obj);
-                              }}
-                            />
+                          <Button
+                            title={
+                              <CustomText
+                                bold={false}
+                                style={{
+                                  fontSize: 10,
+                                  color: "#fff",
+                                  fontWeight: 200,
+                                }}
+                              >
+                                {contextDetails?.["TBD"] == 0
+                                  ? "TBD = No"
+                                  : "TBD = Yes"}
+                              </CustomText>
+                            }
+                            style={{
+                              paddingHorizontal: 5,
+                              paddingVertical: 2,
+                              alignSelf: "flex-end",
+                              fontSize: 10,
+                              // left: 30,
+                              //bottom: 4,
+                              backgroundColor:
+                                contextDetails["TBD"] == 0
+                                  ? "#428bca"
+                                  : "#d9534f",
+                            }}
+                            onPress={() => {
+                              let value =
+                                contextDetails["TBD"] == 1 ? "0" : "1";
+                              let obj = { name: "TBD", value: value };
+                              handleTBD(value);
+                              handleChange("OnChange", 0, "OnChange", obj);
+                            }}
+                          />
                           {/* )} */}
                         </View>
                       </View>
@@ -296,7 +325,7 @@ const BorrowerInfo = (prop) => {
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 5,
-                      maxWidth:240
+                      maxWidth: 240,
                     }}
                   >
                     <CustomText style={{ color: "red", fontSize: 12 }}>

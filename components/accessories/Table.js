@@ -348,6 +348,7 @@ const TableNew = (props) => {
                             ]}
                           >
                             <View
+                             testID="gridFields"
                               style={[
                                 {
                                   ...styles.bodyText,

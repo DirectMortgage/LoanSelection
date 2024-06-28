@@ -35,6 +35,7 @@ const RateBandTable = (props) => {
     handleLockRate,
     handleRunAUS,
     handleProgramGuidelines,
+    VisibleRateBand
   } = props;
   const {
     RateBandsRows,
@@ -221,20 +222,26 @@ const RateBandTable = (props) => {
   };
 
   const handleLayout = () => {
-    btnRefLock.current.measureLayout(
-      scrollViewRef.current,
-      (x, y, width, height) => {
-        const centerY = y - scrollViewRef.current.clientHeight / 2 + height / 2;
-        scrollViewRef.current.scrollTo({
-          y: centerY,
-          animated: true,
-          behavior: "smooth",
-        });
-      },
-      (error) => {
-        console.error(error);
-      }
-    );
+    if(ActiveRate?.['RecentlyClickedLP'] == btnRefLock.current.getAttribute('data-testid')){
+   // setTimeout(() => {
+      btnRefLock.current.measureLayout(
+        scrollViewRef.current,
+        (x, y, width, height) => {
+          const centerY =
+            y - scrollViewRef.current.clientHeight / 2 + height / 2;
+            if(centerY <100) return
+          scrollViewRef.current.scrollTo({
+            y: centerY,
+            animated: true,
+            behavior: "smooth",
+          });
+        },
+        (error) => {
+          console.error(error);
+        }
+      );
+   // }, 50);
+    }
   };
   return (
     <>
@@ -296,7 +303,11 @@ const RateBandTable = (props) => {
           <ScrollView
             style={[
               styles.wrapper,
-              { display: CheckBoxVal[e] ? "none" : "flex",borderColor: "#428BCA",borderWidth:contextDetails["isMobileWeb"] ? 0 : 2 },
+              {
+                display: CheckBoxVal[e] ? "none" : "flex",
+                borderColor: "#428BCA",
+                borderWidth: contextDetails["isMobileWeb"] ? 0 : 2,
+              },
             ]}
             key={e}
             testID="scrollContainer"
@@ -306,7 +317,7 @@ const RateBandTable = (props) => {
               style={{
                 //borderWidth: contextDetails["isMobileWeb"] ? 0 : 2,
                 backgroundColor: "#F2F2F2",
-               // borderColor: "#428BCA",
+                // borderColor: "#428BCA",
                 // borderBottomWidth: 0,
                 // borderTopWidth: 0,
                 //  maxWidth:'67%'
@@ -694,6 +705,7 @@ const RateBandTable = (props) => {
                           ActiveRate?.[CommonId]?.["LnProgActiveId"] ==
                             column?.["LnProgActiveId"] && (
                             <Button
+                            testID={e}
                               forwardedRef={btnRefLock}
                               title={
                                 <CustomText

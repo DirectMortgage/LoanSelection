@@ -17,6 +17,7 @@ import {
   handleAPI_,
   handleSelectQuote,
   handleGetUpdatedPaymentSection,
+  handleLogDWCallToActionEventParent,
 } from "./CommonFunctions";
 import AdjustmentDetails from "../AdjustmentDetails";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -402,12 +403,16 @@ const LoanProductTable = (props) => {
     } else {
       if (
         contextDetails["OnloadProcess"] == "PQ" ||
-        (contextDetails["showSSNPrompt"] && action.indexOf("Lock") != -1)
+        ((contextDetails["showSSNPrompt"] ||
+          contextDetails["IncludeAddressField"]) &&
+          action.indexOf("Lock") != -1)
       ) {
         let modalFor =
           contextDetails["OnloadProcess"] == "PQ"
             ? "PQ"
-            : contextDetails["showSSNPrompt"] && action.indexOf("Lock") != -1
+            : (contextDetails["showSSNPrompt"] ||
+                contextDetails["IncludeAddressField"]) &&
+              action.indexOf("Lock") != -1
             ? "SSN"
             : "PQ";
         handleBorInfoModalForLock(action, LineId, "Modal", {}, modalFor);
@@ -423,6 +428,30 @@ const LoanProductTable = (props) => {
     modalFor
   ) => {
     if (Type == "Modal") {
+      //if (modalFor == "PQ") {
+      let InvalidBorAddress = false,
+        InputParams = contextDetails["InputData"];
+      let propertyAddress =
+        InputParams["DataIn"]?.[2]?.["PropertyInfo"]?.[0]?.["SubjectAddress"] ||
+        "";
+      if (
+        ["0", "", "tbd", "to be determined", null, undefined].includes(
+          propertyAddress?.trim().toLowerCase()
+        ) &&
+        action.indexOf("Lock") != -1
+      ) {
+        InvalidBorAddress = true;
+      } else {
+        InvalidBorAddress = false;
+      }
+      setContextDetails((prevContext) => {
+        return {
+          ...prevContext,
+          InvalidBorAddress,
+          showSpinner: false,
+        };
+      });
+      //}
       setOpen({
         ...Open,
         BorInfo: !Open["BorInfo"],
@@ -434,7 +463,8 @@ const LoanProductTable = (props) => {
     } else if (Type == "OnChange") {
       let { name, value, index = 0 } = obj;
 
-      let additionalObj = {};
+      let additionalObj = {},
+        InvalidBorAddress;
       if (["FirstName", "LastName", "SSN", "TBD"].includes(name)) {
         if (name == "SSN") {
           if (value.length == 9) {
@@ -495,6 +525,19 @@ const LoanProductTable = (props) => {
             };
             return obj;
           });
+        } else if (name == "SubjectAddress") {
+          if (
+            ["0", "", "tbd", "to be determined", null, undefined].includes(
+              value?.trim().toLowerCase()
+            )
+          ) {
+            InvalidBorAddress = true;
+          } else {
+            InvalidBorAddress = false;
+            if (contextDetails?.["TBD"] == 1) {
+              handleTBD(0);
+            }
+          }
         }
 
         setContextDetails((prevState) => {
@@ -515,6 +558,7 @@ const LoanProductTable = (props) => {
               ...prevState.InputData,
               DataIn: newDataIn,
             },
+            InvalidBorAddress,
           };
         });
       }
@@ -539,8 +583,9 @@ const LoanProductTable = (props) => {
         try {
           if (
             e["FirstName"].length &&
-            e["LastName"].length &&
-            (contextDetails?.["TBD"] == 0 || action.indexOf("Lock") == -1)
+            e["LastName"].length
+            //&&
+            //(contextDetails?.["TBD"] == 0 || action.indexOf("Lock") == -1)
           )
             allowSave = true;
           else allowSave = false;
@@ -565,11 +610,12 @@ const LoanProductTable = (props) => {
       try {
         if (
           BorrObj["FirstName"].length &&
-          BorrObj["LastName"].length &&
-          (!["0", "", "tbd", "to be determined", null, undefined].includes(
-            propertyAddress?.trim().toLowerCase()
-          ) ||
-            action.indexOf("Lock") == -1)
+          BorrObj["LastName"].length
+          //  &&
+          // (!["0", "", "tbd", "to be determined", null, undefined].includes(
+          //   propertyAddress?.trim().toLowerCase()
+          // ) ||
+          //   action.indexOf("Lock") == -1)
           // BorrObj["SSN"] && BorrObj["SSN"].replace("-", "").length == 9
         )
           allowSave = true;
@@ -785,9 +831,9 @@ const LoanProductTable = (props) => {
       let addressStatus = await fnCheckAddressValidity();
       let { ValidAddress, TBD } = JSON.parse(addressStatus)["Table"][0];
       if (ValidAddress == 0 && TBD == 0) {
-        AllowLock = false;
-        ErrorMsg =
-          "Rate Lock option is not available until the property address is validated.";
+        // AllowLock = false;
+        // ErrorMsg =
+        //   "Rate Lock option is not available until the property address is validated.";
       } else if (ValidAddress == 0 && TBD == 1) {
         let basicLockInfo = await fnValidateLoanBasicInfo();
         if (basicLockInfo.indexOf("SSN") >= 0) {
@@ -804,7 +850,8 @@ const LoanProductTable = (props) => {
       if (ValidAddress == 1 && (AllowlockStatus == 4 || AllowlockStatus == 5)) {
         AllowLock = false;
         ErrorMsg =
-          "Interest Rates are being regenerated. Please check back later for rate lock options.";
+          "Interest Rates have expired from the previous day. Please check back after 8:30 AM MDT.";
+        //"Interest Rates are being regenerated. Please check back later for rate lock options.";
       }
     }
     if (ChangeRate || FloatDown) {
@@ -887,6 +934,19 @@ const LoanProductTable = (props) => {
       finalPoints = cleanValue(finalPoints);
 
       if (SelectFlag == 1) {
+        try {
+          handleLogDWCallToActionEventParent(
+            "Create Loan and Lock Rate",
+            contextDetails["parentQueryString"]["email"],
+            isMobileWeb,
+            contextDetails["LoanOfficerId"]
+          );
+        } catch (error) {
+          console.error(
+            "Error in handleLogDWCallToActionEventParent ==>",
+            error
+          );
+        }
         handleLockRate_DB(
           InterestRate, //finalRate,
           BasePoints,
@@ -896,6 +956,19 @@ const LoanProductTable = (props) => {
           LoanID
         );
       } else if (SelectFlag == 2) {
+        try {
+          handleLogDWCallToActionEventParent(
+            "Create Loan and Float Rate",
+            contextDetails["parentQueryString"]["email"],
+            isMobileWeb,
+            contextDetails["LoanOfficerId"]
+          );
+        } catch (error) {
+          console.error(
+            "Error in handleLogDWCallToActionEventParent ==>",
+            error
+          );
+        }
         handleRateLockOption_SelectOnly(
           InterestRate, //finalRate,
           BasePoints,
@@ -1310,6 +1383,18 @@ const LoanProductTable = (props) => {
       } catch (error) {
         console.log("Error in Selecting MI Quote");
       }
+
+      try {
+        handleLogDWCallToActionEventParent(
+          "Lock Rate",
+          contextDetails["parentQueryString"]["email"],
+          isMobileWeb,
+          contextDetails["LoanOfficerId"]
+        );
+      } catch (error) {
+        console.error("Error in handleLogDWCallToActionEventParent ==>", error);
+      }
+
       handleReset();
       setContextDetails((prevContext) => {
         return {
@@ -1491,6 +1576,16 @@ const LoanProductTable = (props) => {
         console.log("Error in Selecting MI Quote");
       }
 
+      try {
+        handleLogDWCallToActionEventParent(
+          "Float Rate",
+          contextDetails["parentQueryString"]["email"],
+          isMobileWeb,
+          contextDetails["LoanOfficerId"]
+        );
+      } catch (error) {
+        console.error("Error in handleLogDWCallToActionEventParent ==>", error);
+      }
       setContextDetails((prevContext) => {
         return {
           ...prevContext,
@@ -2955,6 +3050,7 @@ const LoanProductTable = (props) => {
                           handleLockRate={handleLockRate}
                           handleRunAUS={handleRunAUS}
                           handleProgramGuidelines={handleProgramGuidelines}
+                          VisibleRateBand={VisibleRateBand}
                         />
                       </View>
                     </View>

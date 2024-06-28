@@ -1044,6 +1044,7 @@ const LoanProducts = ({ Data, SearchInfo, handleLock, handleLoanProducts }) => {
               LineId: obj["LineId"],
               LnProgActiveId: obj["activeLNPId"],
             },
+            'RecentlyClickedLP': obj["LineId"]
           };
         });
         const updatedItems = [...LoanProducts];

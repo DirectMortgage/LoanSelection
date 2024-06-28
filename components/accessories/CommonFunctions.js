@@ -1,7 +1,10 @@
 import { createContext } from "react";
 
 const handleAPI = async ({ name, params, method, requestOptions = null }) => {
-  let url = "https://www.solutioncenter.biz/RateLockAPI/api/";
+  let url = "../../../RateLockAPI/api/";
+  if (__DEV__) {
+    url = "https://www.solutioncenter.biz/RateLockAPI/api/";
+  }
   params = Object.keys(params)
     .map((key) => `${key}=${params[key]}`)
     .join("&");
@@ -33,10 +36,10 @@ const handleAPI = async ({ name, params, method, requestOptions = null }) => {
 };
 
 const handleAPI_ = async ({ name, params, method, requestOptions = null }) => {
-  let url = "https://www.solutioncenter.biz/RateLockAPI/api/";
-  // params = Object.keys(params)
-  // .map((key) => `${key}=${params[key]}`)
-  // .join("&");
+  let url = "../../../RateLockAPI/api/";
+  if (__DEV__) {
+    url = "https://www.solutioncenter.biz/RateLockAPI/api/";
+  }
   let body = JSON.stringify(params);
   try {
     return fetch(`${url}${name}?`, {
@@ -800,7 +803,7 @@ const handleConstructXML = (res) => {
   RateDataXML = `<RateDataXML>${RateDataXML}</RateDataXML>`;
 
   index = fnGetIndex(changeRateResponse, "Addons");
-  let addons = changeRateResponse[index]?.["Addons"]||[];
+  let addons = changeRateResponse[index]?.["Addons"] || [];
   let AddonsXML = "";
   for (let i = 0; i < addons.length; i++) {
     const element = addons[i];
@@ -963,8 +966,7 @@ const fnFindMinFICO = (data) => {
       }
     });
   });
-if(minFicoScore == 'Infinity')
-  minFicoScore = false;
+  if (minFicoScore == "Infinity") minFicoScore = false;
   return minFicoScore;
 };
 const fnOpenEditRightsPage = (SessionId, LoanId, FormId) => {
@@ -1007,6 +1009,61 @@ const handleMOSearchFlow = async (Value, LoanId, type) => {
   return response;
 };
 
+const handleLogDWCallToActionEventParent = async (
+  Buttontext,
+  emailId,
+  device,
+  LO
+) => {
+  if (window.parent.location.href.indexOf("runscenario") == -1) return;
+  let params = {
+    PageTitle: "Run Scenario",
+    PageURL: window.location.href,
+    device: device ? "mobile" : "desktop",
+    IPAddress: JSON.parse(localStorage.getItem("DeviceId")) || 0,
+    ParentId: parseInt(JSON.parse(localStorage.getItem("iPageLoadId") ||'0')),
+    Buttontext,
+    detailsJson: JSON.stringify([
+      {
+        Browser: handleGetBrowserName(),
+        LoanId: 0,
+        LoanOfficerId: LO || 0,
+        Email: emailId || "",
+      },
+    ]),
+  };
+  if (Buttontext !== "") {
+    await handleAPI({
+      name: "fnLogDWCallToActionEvent",
+      params,
+    })
+      .then(async (response) => {
+        console.log(" fnLogDWCallToActionEvent ====> ", response);
+      })
+      .catch((e) =>
+        console.log("Error form fnLogDWCallToActionEvent ====> ", e)
+      );
+  }
+};
+const handleGetBrowserName = () => {
+  var ua = navigator.userAgent;
+  var tem;
+  var M =
+    ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) ||
+    [];
+  if (/trident/i.test(M[1])) {
+    tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+    return "IE " + (tem[1] || "");
+  }
+  if (M[1] === "Chrome") {
+    tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
+    if (tem != null) return tem.slice(1).join(" ").replace("OPR", "Opera");
+  }
+  M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, "-?"];
+  if ((tem = ua.match(/version\/(\d+)/i)) != null) M.splice(1, 1, tem[1]);
+
+  return M[0]; //.join(" ");
+};
 export {
   handleAPI,
   formatCurrency,
@@ -1053,5 +1110,6 @@ export {
   handleUpdateLenderComp,
   fnFindMinFICO,
   fnOpenEditRightsPage,
-  handleMOSearchFlow
+  handleMOSearchFlow,
+  handleLogDWCallToActionEventParent,
 };

@@ -273,7 +273,8 @@ const InputBoxOrdinary = (props) => {
           backgroundColor: disabled ? "#eae6e691" : "inherit",
           marginBottom: Margin ? 0 : 15,
           borderColor:
-            validate && ["", 0, null, undefined, "0"].includes(value) || (name == 'PA' && validate)
+            (validate && ["", 0, null, undefined, "0"].includes(value)) ||
+            (name == "PA" && validate)
               ? "red"
               : name == "SSN" && value.replaceAll("-", "").length != 9
               ? "red"
@@ -355,7 +356,7 @@ const styles = StyleSheet.create({
   accordTitleCustom: {
     fontWeight: 800,
     fontSize: 18,
-    
+
     color: "#666666",
     alignItems: "center",
     display: "flex",

@@ -40,6 +40,7 @@ import {
   handleProceedRunMIQuote,
   fnFindMinFICO,
   handleMOSearchFlow,
+  handleLogDWCallToActionEventParent,
 } from "./accessories/CommonFunctions";
 import DropDownButton from "./accessories/DropDownButton";
 import { web, android, ios } from "./accessories/Platform";
@@ -254,7 +255,8 @@ const SearchCriteria = ({
         Index = fnGetIndex(LoanInfo, "BorrInfo");
         let CustIds = [],
           SSN = [],
-          CRIDs = [],FTHB =0,
+          CRIDs = [],
+          FTHB = 0,
           showSSNPrompt = false;
         if (
           (Index != -1 &&
@@ -268,8 +270,11 @@ const SearchCriteria = ({
             let row = LoanInfo[Index]["BorrInfo"][i];
             CustIds.push(row["CustID"] || "");
             CRIDs.push(row["CRRId"] || "0");
-            if(row['firstTimeHomeBuyer'] == 'Yes' || row['firstTimeHomeBuyer'] == 1){
-              FTHB = 1
+            if (
+              row["firstTimeHomeBuyer"] == "Yes" ||
+              row["firstTimeHomeBuyer"] == 1
+            ) {
+              FTHB = 1;
             }
             if ((row["SSN"] || "").length < 8) showSSNPrompt = true;
             SSN.push(row["SSN"] || "");
@@ -363,7 +368,7 @@ const SearchCriteria = ({
         // //   LoanAmount1st = LoanAmount2
         // //   LoanAmount2nd = LoanAmount
         // // }
-        
+
         setSearchDetails((prevDetails) => {
           return {
             ...prevDetails,
@@ -372,7 +377,7 @@ const SearchCriteria = ({
             "Monthly Income ($)": formatCurrency(Income),
             "Self Employed": IsSelfEmployed,
             "Liabilities ($)": formatCurrency(Liabilities),
-            "First Time Home Buyer": FTHB||0,
+            "First Time Home Buyer": FTHB || 0,
             "Term (Months)": TermMonths,
             "Lien Position": LienPosition,
             "Lien Position Org": LienPosition,
@@ -418,18 +423,18 @@ const SearchCriteria = ({
             ddlRateMethod: ddlRateMethod,
             "Lender Fees In Rate": FeesinRate == 0 ? 2 : FeesinRate,
             "Nearest Rate Charge": NearestCharge,
-            "Rent Ratio": formatPercentage(RentRatio,2),
+            "Rent Ratio": formatPercentage(RentRatio, 2),
             "Lenders to Search": LendersToSearch,
             TBD: TBD,
             "MI Type": MortInsPremium || 0,
             "Debt to Income Ratio %": formatPercentage(DTI, 2),
             "Mortgage Insurance Type": MortInsPremium || 0,
-            RequestEscrowWaiver:RequestEscrow||0,
-            EnergyEfficient:EnergyEffMort||0,
-            PropertylistedMLS:PropertylistedonMLS||0,
-            DownPaymentGift:NonProfitGiftFund||0,
-            NoPPP:SearchNoPPP||0,
-            LawEnforcement:LawEnforceGrant||0
+            RequestEscrowWaiver: RequestEscrow || 0,
+            EnergyEfficient: EnergyEffMort || 0,
+            PropertylistedMLS: PropertylistedonMLS || 0,
+            DownPaymentGift: NonProfitGiftFund || 0,
+            NoPPP: SearchNoPPP || 0,
+            LawEnforcement: LawEnforceGrant || 0,
           };
         });
         //*************************************** Search section details binding portion *****************************
@@ -463,6 +468,10 @@ const SearchCriteria = ({
             showSSNPrompt,
             LoanOfficerId: LoanOfficer,
             InputData: { DataIn: [...LoanInfo] },
+            IncludeAddressField:
+              ["0", "", "tbd", "to be determined", null, undefined].includes(
+                SubjectAddress?.trim().toLowerCase()
+              ) || false,
           };
         });
       }
@@ -508,66 +517,68 @@ const SearchCriteria = ({
     let queryString = queryStringToObject();
     let parentQueryString = queryStringToObject(window.parent.location.href);
     let EmpNum = await handleGetSessionData(queryString["SessionId"], "empnum");
-    if (EmpNum == "Output") {
+    if (EmpNum == "Output" || EmpNum.length == 0) {
       setModalOpen({
         ...modalOpen,
-        RateSheetRunWarning: true,
+        RateSheetRunWarning: !parentQueryString["email"] && true,
         Msg: "      Your Session is InActive!!!       ",
       });
+      //return
     }
     let EmpType = await handleGetSessionData(queryString["SessionId"], "type");
     let CompNum = await handleGetSessionData(
       queryString["SessionId"],
       "compnum"
     );
+    if (EmpNum != "Output" && EmpNum.length != 0) {
+      let LoanId = await handleGetEmpPreQualLoan(EmpNum);
+      await handleSaveBroker(CompNum, LoanId);
+      let iLoanId = LoanId;
+      if (
+        queryString["OnloadProcess"] != "PQ" &&
+        parentQueryString["pqLoan"] != 1
+      ) {
+        //|| queryString["Test"] == 1
+        iLoanId = queryString["LoanId"];
+        // handleSaveBroker(CompNum, LoanId);
+      }
+      // if (queryString["Test"] != 1) handleSaveBroker(CompNum, LoanId);
 
-    let LoanId = await handleGetEmpPreQualLoan(EmpNum);
-    await handleSaveBroker(CompNum, LoanId);
-    let iLoanId = LoanId;
-    if (
-      queryString["OnloadProcess"] != "PQ" &&
-      parentQueryString["pqLoan"] != 1
-    ) {
-      //|| queryString["Test"] == 1
-      iLoanId = queryString["LoanId"];
-      // handleSaveBroker(CompNum, LoanId);
+      handleGetLoanBoardingData(
+        iLoanId,
+        EmpNum,
+        1,
+        0,
+        queryString["SessionId"],
+        0,
+        CompNum
+      ); // 1- PrequalLoan
+
+      setGlobleValue((prevGlobleValue) => {
+        return {
+          ...prevGlobleValue,
+          PQLoanId: LoanId,
+          LoanId: iLoanId || 0,
+          LO: EmpNum,
+          EmpNum: EmpNum,
+          queryString: queryString,
+        };
+      });
+      setContextDetails((prevContext) => {
+        return {
+          ...prevContext,
+          ...queryString,
+          ...parentQueryString,
+          parentQueryString,
+          queryString,
+          LO: EmpNum,
+          EmpNum: EmpNum,
+          EmpType: EmpType,
+          PQLoanId: LoanId,
+          LoanId: iLoanId || 0,
+        };
+      });
     }
-    // if (queryString["Test"] != 1) handleSaveBroker(CompNum, LoanId);
-
-    handleGetLoanBoardingData(
-      iLoanId,
-      EmpNum,
-      1,
-      0,
-      queryString["SessionId"],
-      0,
-      CompNum
-    ); // 1- PrequalLoan
-
-    setGlobleValue((prevGlobleValue) => {
-      return {
-        ...prevGlobleValue,
-        PQLoanId: LoanId,
-        LoanId: iLoanId || 0,
-        LO: EmpNum,
-        EmpNum: EmpNum,
-        queryString: queryString,
-      };
-    });
-    setContextDetails((prevContext) => {
-      return {
-        ...prevContext,
-        ...queryString,
-        ...parentQueryString,
-        parentQueryString,
-        queryString,
-        LO: EmpNum,
-        EmpNum: EmpNum,
-        EmpType: EmpType,
-        PQLoanId: LoanId,
-        LoanId: iLoanId || 0,
-      };
-    });
   };
   const handleAddBorrower = (Type, Id) => {
     let FICO = 0,
@@ -919,7 +930,7 @@ const SearchCriteria = ({
           ...prevContext,
           currentProcess: "GotPageInfo",
           showPageSpinner: false,
-          enableUseLastRun :true
+          enableUseLastRun: true,
         };
       });
       try {
@@ -1191,7 +1202,7 @@ const SearchCriteria = ({
         //   val.includes(type.TypeOption) ? type.TypeBitwise : 0
         // );
         val = val.toString();
-        val = val.split(",").map(item => item.trim());
+        val = val.split(",").map((item) => item.trim());
         const typeBitwiseArray = options.map((type) =>
           val.indexOf(type.TypeOption) != -1 ? type.TypeBitwise : 0
         );
@@ -1519,7 +1530,10 @@ const SearchCriteria = ({
     }
     setContextDetails((prevContext) => {
       return {
-        ...prevContext, UseLastRunProcessing: true }}); 
+        ...prevContext,
+        UseLastRunProcessing: true,
+      };
+    });
     let obj = {
       SearchId: 0,
       LoanId: LoanId ? LoanId : GlobleValue["PQLoanId"], //405333,
@@ -1530,7 +1544,10 @@ const SearchCriteria = ({
     }).then((response) => {
       setContextDetails((prevContext) => {
         return {
-          ...prevContext, UseLastRunProcessing: false }}); 
+          ...prevContext,
+          UseLastRunProcessing: false,
+        };
+      });
       if (!response) return;
       response = JSON.parse(response)["Table"][0]["SearchJSON"];
       if (response == "{}") {
@@ -1538,7 +1555,7 @@ const SearchCriteria = ({
         return;
       }
       response = JSON.parse(response);
-      SetLoanDetail({ ...LoanDetails, UseLastRun: response["DataIn"]}); // Hits the UseEffect
+      SetLoanDetail({ ...LoanDetails, UseLastRun: response["DataIn"] }); // Hits the UseEffect
       try {
         window.parent.resizeIframe();
       } catch (error) {}
@@ -1602,24 +1619,31 @@ const SearchCriteria = ({
       searchDetails[whichLoanAmount] != "$0" &&
       searchDetails["Lien Position"] != 0 &&
       searchDetails["Lender Fees In Rate"] != 0
+      // &&
+      // !["0", "", "tbd", "to be determined", null, undefined].includes(
+      //   searchDetails["Property Address"]?.trim().toLowerCase()
+      // )
     ) {
       setValidation({ ...validation, stopSearch: false, SearchErrorMsg: "" });
     } else {
+      let errorMsg =
+        "Please complete the required fields identified with a red border";
+      // if (
+      //   ["0", "", "tbd", "to be determined", null, undefined].includes(
+      //     searchDetails["Property Address"]?.trim().toLowerCase()
+      //   )
+      // ) {
+      //   errorMsg =
+      //     "A valid property address is needed before proceeding to Search for Loan Products";
+      // }
       setValidation({
         ...validation,
         stopSearch: true,
-        SearchErrorMsg:
-          "Please complete the required fields identified with a red border",
+        SearchErrorMsg: errorMsg,
       });
       return;
     }
     handleStatus({ Searching: true });
-    // setContextDetails((prevContext) => {
-    //   return {
-    //     ...prevContext,
-    //     currentProcess: "ProductSearch",
-    //   };
-    // });
 
     // for MI Quote
     try {
@@ -1662,7 +1686,7 @@ const SearchCriteria = ({
             PlanType: PlanType,
             VendorIds: "",
             fromRatelock: 1,
-            coverages:''
+            coverages: "",
           };
           handleGetMIQuote(obj_);
         }
@@ -1678,6 +1702,10 @@ const SearchCriteria = ({
         ...prevContext,
         InputData,
         currentProcess: "ProductSearch",
+        IncludeAddressField:
+          ["0", "", "tbd", "to be determined", null, undefined].includes(
+            searchDetails["Property Address"]?.trim().toLowerCase()
+          ) || false,
       };
     });
     console.log(" handleLoanProductsSearch Input ===>>", InputData);
@@ -1702,6 +1730,20 @@ const SearchCriteria = ({
         setTimeout(() => {
           handleGetLoanProducts(RetStatus, LatestRun, 0); //16009895 ,16018701 , 16034653,16040931 - 66
         }, 500);
+
+        try {
+          handleLogDWCallToActionEventParent(
+            "Search for Loan Products",
+            contextDetails["parentQueryString"]["email"],
+            isMobileWeb,
+            GlobleValue["LO"]
+          );
+        } catch (error) {
+          console.error(
+            "Error in handleLogDWCallToActionEventParent ==>",
+            error
+          );
+        }
       } else if (RetStatus == -2) {
         alert(Error);
         handleGetLoanProducts("", 16018701); // when error occurs
@@ -2163,10 +2205,10 @@ const SearchCriteria = ({
         let obj = mergedData?.["DataOut"]?.[1]?.[`LineDataOut_${LineId}`];
         for (let index = 0; index < obj.length; index++) {
           let row = obj[index];
-          let key = Object.keys(row)[0] || 'Addons';
-          if (keysToBeModify.indexOf(key) != -1  ) {
+          let key = Object.keys(row)[0] || "Addons";
+          if (keysToBeModify.indexOf(key) != -1) {
             let point = fnGetIndex(worseCaseData, key);
-            let replacingData = worseCaseData[point]?.[key]|| [];
+            let replacingData = worseCaseData[point]?.[key] || [];
             obj[index][key] = replacingData;
             //console.log(key);
           }
@@ -2991,6 +3033,7 @@ const SearchCriteria = ({
       console.log("UpdateLenderComp ===>", response);
     });
   };
+
   //=================================== Function declarations Ends=======================================
   let options = [
     { label: "Option 1", value: "1" },
@@ -3827,7 +3870,10 @@ const SearchCriteria = ({
               {!contextDetails["isMobileWeb"] && (
                 <View testID="btnUseLastRun" style={{ alignSelf: "center" }}>
                   <Button
-                  isDisable={contextDetails?.["UseLastRunProcessing"] || !contextDetails['enableUseLastRun']}
+                    isDisable={
+                      contextDetails?.["UseLastRunProcessing"] ||
+                      !contextDetails["enableUseLastRun"]
+                    }
                     title={
                       <CustomText
                         style={{
@@ -3836,7 +3882,9 @@ const SearchCriteria = ({
                           fontWeight: 200,
                         }}
                       >
-                        {contextDetails?.['UseLastRunProcessing'] ? 'Fetching...' :'Use Last Run'}
+                        {contextDetails?.["UseLastRunProcessing"]
+                          ? "Fetching..."
+                          : "Use Last Run"}
                       </CustomText>
                     }
                     style={[
@@ -3956,46 +4004,45 @@ const SearchCriteria = ({
                       gap: 10,
                     }}
                   >
-                    {
-                      contextDetails["wholeSaleRights"] != 0 && (
-                        <View
+                    {contextDetails["wholeSaleRights"] != 0 && (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          width: "45%",
+                        }}
+                      >
+                        <CustomText
                           style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            width: "45%",
+                            fontSize: 11,
+                            // marginLeft: 5,
+                            width: "59%",
+                            color: "#6c757d",
                           }}
                         >
-                          <CustomText
-                            style={{
-                              fontSize: 11,
-                             // marginLeft: 5,
-                              width: "59%",
-                              color: "#6c757d",
-                            }}
-                          >
-                            Search With Memory Optimized Flow
-                          </CustomText>
-                          <Swatch
-                            style={{flex:0,alignItems:'left'}}
-                            value={contextDetails["MOSearchFlow"]}
-                            size={13}
-                            onChange={(text) => {
-                              let val = text ? 1 : 0;
-                              handleMOSearchFlow(
-                                val,
-                                contextDetails["LoanId"],
-                                "Update"
-                              );
-                              setContextDetails((prevContext) => {
-                                return {
-                                  ...prevContext,
-                                  MOSearchFlow: Boolean(val),
-                                };
-                              });
-                            }}
-                          />
-                        </View>
-                      )}
+                          Search With Memory Optimized Flow
+                        </CustomText>
+                        <Swatch
+                          style={{ flex: 0, alignItems: "left" }}
+                          value={contextDetails["MOSearchFlow"]}
+                          size={13}
+                          onChange={(text) => {
+                            let val = text ? 1 : 0;
+                            handleMOSearchFlow(
+                              val,
+                              contextDetails["LoanId"],
+                              "Update"
+                            );
+                            setContextDetails((prevContext) => {
+                              return {
+                                ...prevContext,
+                                MOSearchFlow: Boolean(val),
+                              };
+                            });
+                          }}
+                        />
+                      </View>
+                    )}
                     <Button
                       isDisable={Status["Searching"]}
                       title={
@@ -4010,9 +4057,9 @@ const SearchCriteria = ({
                           }}
                         >
                           {!Status["Searching"] ? (
-                            <>
+                            <> {' '}
                               <Icon name="search" size={14} color="white" />
-                              {` Search for Loan Products`}
+                              {` Search for Loan Products `}
                             </>
                           ) : (
                             `Searching...`

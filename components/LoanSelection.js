@@ -46,21 +46,29 @@ const LoanSelection = (props) => {
     } catch (error) {
       console.log("Error while hiding production spinner!!");
     }
-
-    let queryString = queryStringToObject();
-    let EmpNum = await handleGetSessionData(queryString["SessionId"], "empnum");
-    let iLoanId = await handleGetEmpPreQualLoan(EmpNum);
-    let MOSearchFlow = await handleMOSearchFlow(0,iLoanId,'Get');
-    if(EmpNum == 'Output' || EmpNum.length == 0) MOSearchFlow = '[]'
-    let LoanId = queryString["LoanId"] || iLoanId;
-    let isLocked = await IsLockedLoan(LoanId);
-    if (isLocked == 1) {
-      setHeaderInfo({
-        name: `${LoanId} - Interest Rate Lock Confirmation`,
-        icon: false,
-      });
+    let queryString = {},
+      EmpNum = 0,
+      iLoanId = 0,
+      LoanId = 0,
+      MOSearchFlow = 0,
+      isLocked = 0,
+      wholeSaleRights = 0;
+    queryString = queryStringToObject();
+    EmpNum = await handleGetSessionData(queryString["SessionId"], "empnum");
+    if (EmpNum != "Output" && EmpNum.length != 0) {
+      iLoanId = await handleGetEmpPreQualLoan(EmpNum);
+      MOSearchFlow = await handleMOSearchFlow(0, iLoanId, "Get");
+      //if (EmpNum == "Output" || EmpNum.length == 0) MOSearchFlow = "[]";
+      LoanId = queryString["LoanId"] || iLoanId;
+      isLocked = await IsLockedLoan(LoanId);
+      if (isLocked == 1) {
+        setHeaderInfo({
+          name: `${LoanId} - Interest Rate Lock Confirmation`,
+          icon: false,
+        });
+      }
+      wholeSaleRights = await handleWholeSaleRights(EmpNum);
     }
-    let wholeSaleRights = await handleWholeSaleRights(EmpNum);
     setContextDetails((prevContext) => {
       return {
         ...prevContext,
@@ -69,12 +77,16 @@ const LoanSelection = (props) => {
         IsLocked: isLocked,
         LoanId,
         EmpNum,
-        MOSearchFlow:JSON.parse(MOSearchFlow||'{}')['Table']?.[0]?.['Run_Pricing_IN_MO']||false,
-        wholeSaleRights :wholeSaleRights||0,
+        MOSearchFlow:
+          JSON.parse(MOSearchFlow || "{}")["Table"]?.[0]?.[
+            "Run_Pricing_IN_MO"
+          ] || false,
+        wholeSaleRights: wholeSaleRights || 0,
         isLoadedInsideiFrame:
           window.parent.location.href != window.location.href,
         isPublicRunScenario:
           window.parent.location.href.indexOf("runscenario") != -1,
+          showPageSpinner: window.parent.location.href.indexOf("runscenario") == -1
       };
     });
   };
@@ -83,14 +95,17 @@ const LoanSelection = (props) => {
   };
 
   return (
-    <View style={{ width: "100%", alignItems: "center" }} testID={'viewWrapper'}>
+    <View
+      style={{ width: "100%", alignItems: "center" }}
+      testID={"viewWrapper"}
+    >
       {/* <Header name={headerInfo["name"]} icon={headerInfo["icon"]} /> */}
-      {(contextDetails["IsLocked"] == 1 || Status["LoanLocked"] ) &&
+      {(contextDetails["IsLocked"] == 1 || Status["LoanLocked"]) &&
       !Status["ChangeRate"] &&
       !Status["FloatDown"] &&
       !Status["ChangeLoanProgram"] &&
       (contextDetails["isLoadedInsideiFrame"] ||
-        contextDetails["standalone"] == 1 || 
+        contextDetails["standalone"] == 1 ||
         __DEV__) ? (
         <View style={{ width: "100%" }}>
           <LockConfirmation handleLock={handleLock} />
@@ -98,7 +113,9 @@ const LoanSelection = (props) => {
       ) : contextDetails["IsLocked"] == 0 ||
         Status["ChangeRate"] ||
         Status["FloatDown"] ||
-        Status["ChangeLoanProgram"] || (contextDetails['isPublicRunScenario'] && contextDetails["IsLocked"] != 1) ? (
+        Status["ChangeLoanProgram"] ||
+        (contextDetails["isPublicRunScenario"] &&
+          contextDetails["IsLocked"] != 1) ? (
         <>
           <SearchCriteria
             handleLoanProducts={setLoanProducts}
@@ -119,7 +136,13 @@ const LoanSelection = (props) => {
         </>
       ) : (
         <>
-          <View style={{ height:'90vh', backgroundColor: "#dddddd", width: "100%" }}>
+          <View
+            style={{
+              height: "90vh",
+              backgroundColor: "#dddddd",
+              width: "100%",
+            }}
+          >
             <ArrowSpinner size={50} />
           </View>
         </>
